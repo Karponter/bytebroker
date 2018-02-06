@@ -1,0 +1,7 @@
+describe Datasource
+
+  describe #constructor
+
+	it should contain properties
+	it should instantinate with all methods of UnimplementedMethod
+		get, set, mset, mget, find, delete
