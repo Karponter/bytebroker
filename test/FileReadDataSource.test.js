@@ -1,6 +1,6 @@
 const expect = require('expect');
 const fs = require('fs');
-const FileReadDataSource = require('../FileReadDataSource');
+const FileReadDataSource = require('../src/lib/FileReadDataSource');
 
 let dataSource, brokenDataSource, nonExistantDataSource;
 

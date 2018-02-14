@@ -1,6 +1,6 @@
 const expect = require('expect');
 const fs = require('fs');
-const FileReadWriteDataSource = require('../FileReadWriteDataSource');
+const FileReadWriteDataSource = require('../src/lib/FileReadWriteDataSource');
 
 let dataSource, data;
 
