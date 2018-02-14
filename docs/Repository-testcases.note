@@ -1,0 +1,138 @@
+describe Repository
+
+  describe #constructor
+
+	it should correctly construct with no parameters
+	it should construct with in-memory caching
+	it should accept custom Datasource stack as provision
+	it should accept custom SyncStrategy as provision
+	it should accept custom EntityFactory as provision
+	it should accept custom ErrorProcessingStrategy as provision
+
+  describe #get
+	
+	it should always return Promise
+	it should resolve with value stored under specified ID
+	it should resolve with null if no value by id exists
+	it should reject if error occurs in Datasource
+	it should resolve with value from Datasorce with minimal readPriority property
+	it should try to read all Datasources if requested one fails
+	it should resolve with Entity exemplar if EntityProvider was specified in constructot
+	
+  describe #set
+
+	it should always return Promise
+	it should resolve with ID if value was saved correctly
+	it should resolve with null if value was not saved
+	it should set value to WriteFirst datasource with minimal writePriority property
+	it should set value to every WriteAlways datasource
+	it should not set value to any of NoWrite datasource
+
+  describe #del
+
+	it should alwasy return Promise
+	it should resolve with true if value was removed
+	it should resolve with false if value was not removed
+	it should reject if error occurs while removing
+
+  describe #find
+
+	it should alwasy return Promise
+
+  describe #mset
+
+	it should always return Promise
+	it should accept list of IDs and list of values as a parameters
+	it should resolve a list of IDs that were set
+	it should resolve null instead of ID if value was not set
+        it should set values to WriteFirst datasource with minimal writePriority property
+        it should set values to every WriteAlways datasource
+        it should not set values to any of NoWrite datasource
+
+
+  describe #mget
+
+	it should always return Promise
+	it should accept list of IDs and list of values as a parameters
+	it should resolve multiple entities by specified list of IDs
+	it should resolve null for every ID that is not present in datasource
+	it should reuse #get method multiple times if #mget is not specified for a datasource
+	it should resolve with multiple entities from Datasorce with minimal readPriority property
+        it should try to read all Datasources if requested one fails
+        it should resolve with Entity exemplar if EntityProvider was specified in constructot
+
+  describe #mdel
+
+	it should always return a Promise
+	it should accept list of IDs and list of values as a parameters
+	it should resolve with reports of every delete operator
+	it should resolve with true if value was removed
+        it should resolve with false if value was not removed
+
+  describe #sync
+  
+	it should always return Promise
+	it should resolve when sync finished
+	it should reject if sync failed
+  
+  describe SyncStrategy
+
+    describe SYNC_ON_TIMEOUT
+
+      it should trigger datasource update with specified interval
+
+      describe #sync
+
+        it should trigger values update to datasource
+
+      describe #set
+
+        it should not trigger datasource update
+
+      describe #delete
+
+        it should not trigger datasource update
+
+      describe #mset
+
+        it should not trigger datasource update
+
+    describe SYNC_ON_REQUEST
+
+      describe #sync
+
+	it should trigger values update to datasource
+
+      describe #set
+	
+	it should not trigger datasource update
+
+      describe #delete
+  
+	it should not trigger datasource update
+
+      describe #mset
+
+	it should not trigger datasource update
+
+    describe SYNC_ON_UPDATE
+
+      describe #sync
+
+        it should not trigger datasource update
+
+      describe #set
+
+        it should trigger values update to datasource
+
+      describe #delete
+
+        it should trigger values update to datasource
+
+      describe #mset
+
+        it should trigger values update to datasource
+
+
+
+
