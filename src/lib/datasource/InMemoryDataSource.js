@@ -1,3 +1,4 @@
+'use strict';
 const Datasource = require('../Datasource');
 
 class InMemoryDatasource extends Datasource{

@@ -1,8 +1,11 @@
+'use strict';
 const fs = require('fs');
 const Datasource = require('../Datasource');
 
 class FileReadDataSource extends Datasource {
+    
     constructor(fileName) {
+        super();
         this.fileName = fileName;
     }
 

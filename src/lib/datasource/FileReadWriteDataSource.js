@@ -1,3 +1,4 @@
+'use strict';
 const fs = require('fs');
 const FileReadDataSource = require('./FileReadDataSource');
 const Datasource = require('../Datasource')
