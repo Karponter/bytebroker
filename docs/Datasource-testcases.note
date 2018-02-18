@@ -56,3 +56,13 @@ describe Datasource
     it should resolve with reports of every delete operator
     it should resolve with true if value was removed
     it should resolve with false if value was not removed
+
+  describe primitive operation sequences
+  
+    it #get — null
+    it #set > #get — testValue
+    it #delete — false
+    it #set > #get > #delete — true
+    it #set > #get > #delete > #get — null
+    it #set > #get > #set > #get — testValue2
+    it #set > #set > #set > #getall — {[all values hash]}
