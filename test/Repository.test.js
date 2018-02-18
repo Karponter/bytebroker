@@ -26,7 +26,7 @@ describe('Repository', () => {
         'syncCache',
       ]);
 
-      expect(repository.datasourcesStack).toBeA('array');
+      expect(repository.datasourcesStack).toBeAn('array');
       expect(repository.syncStrategy).toBeA('number');
       expect(repository.errorPeocessingStrategy).toBeA('number');
       expect(repository.datasourcesStack).toBe(null);
@@ -162,7 +162,11 @@ describe('Repository', () => {
   });
 
   describe('#del', () => {
-    it('should alwasy return Promise', () => {
+    it('should always return Promise', () => {
+      // @todo: do it one time for all methods
+    });
+
+    it('should remove value with specified id', () => {
       const repository = new Repository({ datasource: [ testDatasource ] });
 
       return repository.set('sould-be-removed', 'string')
@@ -175,14 +179,40 @@ describe('Repository', () => {
 
     it('should resolve with true if value was removed', () => {
       const repository = new Repository({ datasource: [ testDatasource ] });
+    
+      return repository.set('sould-be-removed', 'string')
+        .then(() => repository.get('sould-be-removed'))
+        .then(value => expect(value).toExist())
+        .then(() => repository.del('sould-be-removed'))
+        .then(result => expect(result).toEqual(true));
     });
 
-    it('should resolve with false if value was not removed', () => {});
-    it('should reject if error occurs while removing', () => {});
+    it('should resolve with false if value was not removed', () => {
+      const repository = new Repository({ datasource: [ testDatasource ] });
+    
+      return repository.get('sould-be-removed')
+        .then(value => expect(value).toEqual(null))
+        .then(() => repository.del('sould-be-removed'))
+        .then(result => expect(result).toEqual(false));
+    });
+
+    it('should reject if error occurs while removing', () => {
+      // @todo: do it one time for all methods
+    });
   });
 
   describe('#find', () => {
-    it('should alwasy return Promise', () => {});
+    it('should alwasy return Promise', () => {
+      // @todo: do it one time for all methods
+    });
+
+    it('should list all records of the datasource if * is specified', () => {
+      const datasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [ datasource ] });
+
+      repository.set()      
+
+    });
   });
 
   describe('#mset', () => {

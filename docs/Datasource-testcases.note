@@ -2,6 +2,57 @@ describe Datasource
 
   describe #constructor
 
-	it should contain properties
-	it should instantinate with all methods of UnimplementedMethod
-		get, set, mset, mget, find, delete
+    it should contain properties
+    get, set, mset, mget, find, delete, mdelete, getAll, readPriority, writePriority, writeMode
+
+  describe methods should be thenable
+
+    #method should return Promise
+    #method should reject if error occurs
+
+  describe #get
+
+    it should always return Promise
+    it should resolve with value stored under specified ID
+    it should resolve with null if no value by id exists
+    it should reject if error occurs
+
+  describe #set
+
+    it should always return Promise
+    it should resolve with ID if value was saved correctly
+    it should resolve with null if value was not saved
+    it should reject if error occurs
+
+  describe #delete
+
+    it should alwasy return Promise
+    it should resolve with true if value was removed
+    it should resolve with false if value was not removed
+    it should reject if error occurs while removing
+
+  describe #getAll
+    
+    it should resolve with all values, contained in a datasource
+
+  describe #mset
+  
+    it should accept list of IDs and list of values as a parameters
+    it should resolve a list of IDs that were set
+    it should resolve null instead of ID if value was not set
+
+  describe #mget
+
+    it should accept list of IDs and list of values as a parameters
+    it should resolve multiple entities by specified list of IDs
+    it should resolve null for every ID that is not present in datasource
+    it should resolve with multiple entities from Datasorce with minimal readPriority property
+    it should try to read all Datasources if requested one fails
+    it should resolve with Entity exemplar if EntityProvider was specified in constructot
+
+  describe #mdel
+
+    it should accept list of IDs and list of values as a parameters
+    it should resolve with reports of every delete operator
+    it should resolve with true if value was removed
+    it should resolve with false if value was not removed

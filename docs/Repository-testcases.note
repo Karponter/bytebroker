@@ -2,137 +2,88 @@ describe Repository
 
   describe #constructor
 
-	it should correctly construct with no parameters
-	it should construct with in-memory caching
-	it should accept custom Datasource stack as provision
-	it should accept custom SyncStrategy as provision
-	it should accept custom EntityFactory as provision
-	it should accept custom ErrorProcessingStrategy as provision
+    it should correctly construct with no parameters
+    it should construct with in-memory caching
+    it should accept custom Datasource stack as provision
+    it should accept custom SyncStrategy as provision
+    it should accept custom EntityFactory as provision
+    it should accept custom ErrorProcessingStrategy as provision
+
+  describe methods should be thenable
+
+    #method should return Promise
+    #method should reject if error occurs
 
   describe #get
-	
-	it should always return Promise
-	it should resolve with value stored under specified ID
-	it should resolve with null if no value by id exists
-	it should reject if error occurs in Datasource
-	it should resolve with value from Datasorce with minimal readPriority property
-	it should try to read all Datasources if requested one fails
-	it should resolve with Entity exemplar if EntityProvider was specified in constructot
-	
+
+    it should delegate to Datasource::get() method
+    it should should delegate to datasorce with minimal readPriority property
+    it should try to read other datasources if requested one fails
+    it should resolve with Entity exemplar if EntityProvider was specified in constructot
+
   describe #set
 
-	it should always return Promise
-	it should resolve with ID if value was saved correctly
-	it should resolve with null if value was not saved
-	it should set value to WriteFirst datasource with minimal writePriority property
-	it should set value to every WriteAlways datasource
-	it should not set value to any of NoWrite datasource
+    it should delegate to Datasource::set() method
+    it should delegate to WriteFirst datasource with minimal writePriority property
+    it should set value to every WriteAlways datasource
+    it should not set value to any of NoWrite datasource
 
-  describe #del
+  describe #delete
 
-	it should alwasy return Promise
-	it should resolve with true if value was removed
-	it should resolve with false if value was not removed
-	it should reject if error occurs while removing
+    it should delegate to Datasource::del() method
+
+  describe #getAll
+
+    it should delegate to Datasource::getAll() method
+    it should merge all data from datasources with respect to readPriority
 
   describe #find
 
-	it should alwasy return Promise
+    it should delegate to Datasource::find() method
+    it should merge all data from datasources with respect to readPriority
 
   describe #mset
 
-	it should always return Promise
-	it should accept list of IDs and list of values as a parameters
-	it should resolve a list of IDs that were set
-	it should resolve null instead of ID if value was not set
-        it should set values to WriteFirst datasource with minimal writePriority property
-        it should set values to every WriteAlways datasource
-        it should not set values to any of NoWrite datasource
-
+    it should delegate to Datasource::mset() method if it is implemented
+    it should delegate to multiple #set() methods if #mset is not implemented
 
   describe #mget
 
-	it should always return Promise
-	it should accept list of IDs and list of values as a parameters
-	it should resolve multiple entities by specified list of IDs
-	it should resolve null for every ID that is not present in datasource
-	it should reuse #get method multiple times if #mget is not specified for a datasource
-	it should resolve with multiple entities from Datasorce with minimal readPriority property
-        it should try to read all Datasources if requested one fails
-        it should resolve with Entity exemplar if EntityProvider was specified in constructot
+    it should delegate to Datasource::mget() method if it is implemented
+    it should delegate to multiple #get() methods if #mget is not implemented
 
-  describe #mdel
+  describe #mdelete
 
-	it should always return a Promise
-	it should accept list of IDs and list of values as a parameters
-	it should resolve with reports of every delete operator
-	it should resolve with true if value was removed
-        it should resolve with false if value was not removed
+    it should delegate to Datasource::mdelete() method if it is implemented
+    it should delegate to multiple #delete() methods if #mdelete is not implemented
 
   describe #sync
   
-	it should always return Promise
-	it should resolve when sync finished
-	it should reject if sync failed
+    it should resolve when sync is finished
   
   describe SyncStrategy
 
     describe SYNC_ON_TIMEOUT
 
       it should trigger datasource update with specified interval
-
-      describe #sync
-
-        it should trigger values update to datasource
-
-      describe #set
-
-        it should not trigger datasource update
-
-      describe #delete
-
-        it should not trigger datasource update
-
-      describe #mset
-
-        it should not trigger datasource update
+      it #sync should trigger values update to datasource
+      it #set should NOT trigger datasource update
+      it #delete should NOT trigger datasource update
+      it #mset should NOT trigger datasource update
+      it #mdelete should NOT trigger datasource update
 
     describe SYNC_ON_REQUEST
 
-      describe #sync
-
-	it should trigger values update to datasource
-
-      describe #set
-	
-	it should not trigger datasource update
-
-      describe #delete
-  
-	it should not trigger datasource update
-
-      describe #mset
-
-	it should not trigger datasource update
+      it #sync should trigger values update to datasource
+      it #set should NOT trigger datasource update
+      it #delete should NOT trigger datasource update
+      it #mset should NOT trigger datasource update
+      it #mdelete should NOT trigger datasource update
 
     describe SYNC_ON_UPDATE
 
-      describe #sync
-
-        it should not trigger datasource update
-
-      describe #set
-
-        it should trigger values update to datasource
-
-      describe #delete
-
-        it should trigger values update to datasource
-
-      describe #mset
-
-        it should trigger values update to datasource
-
-
-
-
+      it #sync should NOT trigger values update to datasource
+      it #set should trigger datasource update
+      it #delete should trigger datasource update
+      it #mset should trigger datasource update
+      it #mdelete should trigger datasource update
