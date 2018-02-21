@@ -3,7 +3,7 @@ const fs = require('fs');
 const FileReadDataSource = require('./FileReadDataSource');
 const Datasource = require('../Datasource')
 
-class FileReadWriteDataSource extends FileReadDataSource, Datasource {
+class FileReadWriteDataSource extends FileReadDataSource {
     constructor(filename) {
         super(filename);
     }
