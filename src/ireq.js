@@ -4,4 +4,7 @@ const ireq = require('ireq');
 
 ireq.init(__dirname);
 
-ireq.bind('lib', './lib');
+ireq.bindModule('lib', '/lib');
+ireq.lib.bindModule('datasource', '/datasource');
+
+module.exports = ireq;

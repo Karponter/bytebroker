@@ -1,6 +1,10 @@
 'use strict';
 
-const { InMemoryDatasource, Datasource } = ireq.lib.datasource('');
+const ireq = require('ireq');
+
+const { InMemoryDatasource } = ireq.lib.datasource('');
+const Datasource = ireq.lib('./Datasource');
+
 const assert = require('assert');
 
 class Repository {
@@ -9,7 +13,7 @@ class Repository {
    * Repository instance constructor
    * @param  {Array}    options.datasource
    *         -- stack of datasources to write and read data
-   * @param  {Function} options.entityProvider
+   * @param  {Function} options.entityFactory
    *         -- output entity factory, a pipe for eny gatter operation
    * @param  {Number}   options.syncStrategy
    *         -- constant that defines stratagy of communication with datasources
@@ -20,28 +24,31 @@ class Repository {
     options = options || {};
 
     this.syncCache = new InMemoryDatasource();
-
+    
     // datasource option processing
     if (options.datasource) {
-      options.datasource.forEach(datasource =>
-        assert(datasource instanceof Datasource));
+      options.datasource.forEach(ds =>
+        assert(ds instanceof Datasource));
       // shallow copy optional array to prevent side-effects from outside
       this.datasourceStack = options.datasource.slice(0);
     } else {
       this.datasourceStack = [new InMemoryDatasource()];
     }
 
-    // entityProvider option processing
-    this.entityProvider = null;
-    if (options.entityProvider instanceof Function) {
-      this.entityProvider = options.entityProvider;
+    // entityFactory option processing
+    this.entityFactory = null;
+    if (options.entityFactory instanceof Function) {
+      this.entityFactory = options.entityFactory;
     }
+
+    this.syncStrategy = options.syncStrategy || 0;
+    this.errorPeocessingStrategy = 0;
   }
 
   _shiftDownCache() {
     this.syncCache.find('*')
       .then(this._shiftDownData)
-      .then(haystack => haystack.filter(value => value !== null));
+      .then(haystack => haystack.filter(value => value !== null))
       .then(this.syncCache.mdel);
   }
 
@@ -58,24 +65,47 @@ class Repository {
     //   .then()
   }
 
-  _attemptToWrite
 
-  get() {}
+  get() {
+    return Promise.resolve();
+  }
 
-  set() {}
+  set() {
+    return Promise.resolve();
+  }
 
-  del() {}
+  delete() {
+    return Promise.resolve();
+  }
 
-  mget() {}
+  mget() {
+    return Promise.resolve();
+  }
 
-  mset() {}
+  mset() {
+    return Promise.resolve();
+  }
 
-  mdel() {}
+  mdelete() {
+    return Promise.resolve();
+  }
 
-  find() {}
+  getall() {
+    return Promise.resolve();
+  }
 
-  sync() {}
+  find() {
+    return Promise.resolve();
+  }
+
+  sync() {
+    return Promise.resolve();
+  }
 
 }
+
+Repository.SYNC_STRATEGY = {
+  SYNC_ON_REQUEST: 1,
+};
 
 module.exports = Repository;

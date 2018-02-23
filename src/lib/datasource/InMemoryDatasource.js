@@ -1,7 +1,7 @@
 'use strict';
 const Datasource = require('../Datasource');
 
-class InMemoryDatasource extends Datasource{
+class InMemoryDatasource extends Datasource {
     constructor() {
         super();
         this.storageMap = new Map();

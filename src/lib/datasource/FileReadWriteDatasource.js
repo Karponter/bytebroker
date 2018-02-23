@@ -1,9 +1,9 @@
 'use strict';
 const fs = require('fs');
-const FileReadDataSource = require('./FileReadDataSource');
+const FileReadDatasource = require('./FileReadDatasource');
 const Datasource = require('../Datasource')
 
-class FileReadWriteDataSource extends FileReadDataSource, Datasource {
+class FileReadWriteDatasource extends FileReadDatasource {
     constructor(filename) {
         super(filename);
     }
@@ -60,4 +60,4 @@ class FileReadWriteDataSource extends FileReadDataSource, Datasource {
 
 } 
 
-module.exports = FileReadWriteDataSource;
+module.exports = FileReadWriteDatasource;
