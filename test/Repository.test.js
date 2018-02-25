@@ -7,8 +7,6 @@ const Repository = ireq.lib('./Repository');
 const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
-console.log('InMemoryDatasource', new InMemoryDatasource());
-
 const {
   SYNC_STRATEGY,
   ERROR_PROCESSING_STRATEGY,
