@@ -1,8 +1,8 @@
 'use strict';
 const expect = require('expect');
 const fs = require('fs');
-const FileReadWriteDataSource = require('../src/lib/datasource/FileReadWriteDataSource');
-
+// const FileReadWriteDataSource = require('../src/lib/datasource/FileReadWriteDataSource');
+const inMemoryDataSource = require('../src/lib/datasource/InMemoryDataSource');
 let dataSource, brokenDataSource, nonExistantDataSource, emptyDataSource;
 let fixtureObject = {
   model: 'IPhone',
@@ -11,18 +11,21 @@ let fixtureObject = {
 
 describe('Test all datasouses from ../src/lib/datasouce', () => {
   before(() => {
-      //  todo: review this, and add multiply classes structure
-      const filename = './fixtures/dataCorrect.json';
-      dataSource = new FileReadWriteDataSource(filename);
-  
-      const brokenFilename = './fixtures/dataIncorrect.doc';
-      brokenDataSource = new FileReadWriteDataSource(brokenFilename);
-  
-      const nonExistantFilename = './Test/fixtures/dataCorrect.doc'    
-      nonExistantDataSource = new FileReadWriteDataSource(nonExistantFilename);
+      dataSource = new inMemoryDataSource();
 
-      const emptyFilename = './fixtures/dataEmpty.json';    
-      emptyDataSource = new FileReadWriteDataSource(emptyFilename);
+
+      //  todo: review this, and add multiply classes structure
+      // const filename = './fixtures/dataCorrect.json';
+      // dataSource = new FileReadWriteDataSource(filename);
+  
+      // const brokenFilename = './fixtures/dataIncorrect.doc';
+      // brokenDataSource = new FileReadWriteDataSource(brokenFilename);
+  
+      // const nonExistantFilename = './Test/fixtures/dataCorrect.doc'    
+      // nonExistantDataSource = new FileReadWriteDataSource(nonExistantFilename);
+
+      // const emptyFilename = './fixtures/dataEmpty.json';    
+      // emptyDataSource = new FileReadWriteDataSource(emptyFilename);
     });
 
   after(() => {
@@ -142,7 +145,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
       expect(false).toEqual(true);
     });
 
-    it('should resolve a list of IDs that were set', () => {
+    it.only('should resolve a list of IDs that were set', () => {
       return dataSource.mset(fixtureObject).then((res) => {
         expect(res).toEqual(Object.keys(fixtureObject));
       })
@@ -165,17 +168,17 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
       })
     });
 
-    it('should resolve with true if value was removed', () => {
+    it.only('should resolve with true if value was removed', () => {
       return dataSource.mset(fixtureObject)
         .then(() => dataSource.mdelete(Object.keys(fixtureObject)))
         .then((res) => {
-          Object.keys(fixtureObject).forEach(key => {
+          Object.keys(fixtureObject).forEach((key,index) => { 
             expect(res[key]).toEqual(true);
           });
         })
     });
 
-    it('should resolve with false if value was not removed', () => {
+    it.only('should resolve with false if value was not removed', () => {
       return dataSource.mdelete(Object.keys(fixtureObject))
         .then((res) => {
           Object.keys(fixtureObject).forEach(key => {
