@@ -1,6 +1,6 @@
 {
-  "name": "repository",
-  "version": "1.0.0",
+  "name": "bytebroker",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fraideron/Repository.git"
+    "url": "git+https://github.com/Karponter/bytebroker.git"
   },
-  "author": "Fraideron",
+  "authors": ["Fraideron", "Karponter"],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Fraideron/Repository/issues"
+    "url": "https://github.com/Karponter/bytebroker/issues"
   },
-  "homepage": "https://github.com/Fraideron/Repository#readme",
+  "homepage": "https://github.com/Karponter/bytebroker#readme",
   "devDependencies": {
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.9.0",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@types/node": "^9.4.0",
+    "ireq": "^2.0.0",
     "tslint": "^5.9.1"
   }
 }

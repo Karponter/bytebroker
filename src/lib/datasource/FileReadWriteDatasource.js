@@ -1,16 +1,13 @@
 'use strict';
 const fs = require('fs');
-const FileReadDataSource = require('./FileReadDataSource');
+const FileReadDatasource = require('./FileReadDatasource');
 const Datasource = require('../Datasource')
 
-const undefinedToNull = (value) => 
-    value === undefined ? null : value;
+const undefinedToNull = (value) => value === undefined ? null : value;
 
-class FileReadWriteDataSource extends FileReadDataSource {
-    constructor(filename) {
-        super(filename);
-    }
 
+class FileReadWriteDatasource extends FileReadDatasource {
+    
     /**
      * 
      * @param {*} data 
@@ -104,4 +101,4 @@ class FileReadWriteDataSource extends FileReadDataSource {
     }
 } 
 
-module.exports = FileReadWriteDataSource;
+module.exports = FileReadWriteDatasource;

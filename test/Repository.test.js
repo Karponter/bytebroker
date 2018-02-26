@@ -1,9 +1,10 @@
 'use strict';
 
-// const ireq = require('../src/ireq');
+const ireq = require('../src/ireq');
 const expect = require('expect');
 
 const Repository = ireq.lib('./Repository');
+const Datasource = ireq.lib('./Datasource');
 const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
@@ -17,7 +18,7 @@ describe('Repository', () => {
     it('should correctly construct with no parameters', () => {
       const repository = new Repository();
 
-      expect(repository).toBe(Repository);
+      expect(repository).toBeA(Repository);
       expect(repository).toIncludeKeys([
         'datasourceStack',
         'syncStrategy',
@@ -26,10 +27,9 @@ describe('Repository', () => {
         'syncCache',
       ]);
 
-      expect(repository.datasourcesStack).toBeAn('array');
+      expect(repository.datasourceStack).toBeAn('array');
       expect(repository.syncStrategy).toBeA('number');
       expect(repository.errorPeocessingStrategy).toBeA('number');
-      expect(repository.datasourcesStack).toBe(null);
     });
 
     it('should construct with in-memory caching', () => {
@@ -43,8 +43,8 @@ describe('Repository', () => {
         datasource: [ new InMemoryDatasource() ],
       });
 
-      expect(repository.datasourcesStack).toBeA('array');
-      expect(repository.datasourcesStack[0]).toBeA(InMemoryDatasource);
+      expect(repository.datasourceStack).toBeA('array');
+      expect(repository.datasourceStack[0]).toBeA(InMemoryDatasource);
     });
 
     it('should accept custom SyncStrategy as provision', () => {
@@ -64,193 +64,494 @@ describe('Repository', () => {
       expect(repository.entityFactory()).toEqual('testingResult');
     });
 
-    it('should accept custom ErrorProcessingStrategy as provision', () => {
-      // TBD
+    // @TODO: TBD
+    it.skip('should accept custom ErrorProcessingStrategy as provision', () => {});
+  });
+
+  describe('methods should be thenable', () => {
+    const thenableMethods = ['get', 'set', 'delete', 'mget', 'mset', 'mdelete', 'getall', 'find'];
+    const repository = new Repository();
+
+    thenableMethods.forEach((method) => {
+      it(`#${method} should return Promise`, () => {
+        expect(repository[method]()).toBeA(Promise);
+      });
     });
   });
 
   describe('#get', () => {
-    
-    const testDatasource = new InMemoryDatasource();
-    testDatasource.set('id', 'value');
+    let testDatasource = null;
 
-    it('should always return Promise', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
-
-      const result = repository.get('id');
-      epect(result).toBeA(Promise);
+    beforeEach(() => {
+      testDatasource = new InMemoryDatasource();
+      testDatasource.set('id', 'value');
     });
 
-    it('should resolve with value stored under specified ID', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
+    it('should delegate to Datasource::get() method', () => {
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'get').andCallThrough();
 
       return repository.get('id')
-        .then(value => expect(value).toEqual('value'));
+        .then(() => expect(spy).toHaveBeenCalledWith('id'));
     });
 
-    it('should resolve with null if no value by id exists', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
+    it('should delegate to datasorce with maximum readPriority property', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      const hightPriorityDatasource = new InMemoryDatasource(null, { readPriority: 3 });
+      const repository = new Repository({ datasource: [
+          defaultDatasource,
+          lowPriorityDatasource,
+          hightPriorityDatasource
+      ] });
 
-      return repository.get('non-existing-id')
-        .then(value => expect(value).toEqual(null));
-    });
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'get').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'get').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'get').andCallThrough();
 
-    it('should reject if error occurs in Datasource', (done) => {
-      const brokenDatasource = new BrokenDatasource();
-      const repository = new Repository({ datasource: [ brokenDatasource ] });
-      const successSpy = expect.createSpy();
-
-      repository.get('id')
-        .then(successSpy);
-        .catch(() => {
-          expect(successSpy).toNotHaveBeenCalled();
-          done();
+      return repository.get('id')
+        .then(() => {
+          expect(lowPrioritySpy).toNotHaveBeenCalled();
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id');
         });
     });
 
-    it('should resolve with value from Datasorce with minimal readPriority property', () => {
-      // @todo: move to extednal describe
+    it('should try to read other datasources if requested one fails', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityBrokenDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityBrokenDatasource, 'get').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'get').andReturn(Promise.resolve('result-checker'));
+      const defaultSpy = expect.spyOn(defaultDatasource, 'get').andCallThrough();
+
+      return repository.get('id')
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id');
+          expect(lowPrioritySpy).toHaveBeenCalledWith('id');
+          expect(data).toEqual('result-checker');
+        });
     });
 
-    it('should try to read all Datasources if requested one fails', () => {
-      // @todo: move to extednal describe
-    });
+    it('should resolve with Entity exemplar if EntityFactory was specified in constructot', () => {
+      const repository = new Repository({
+        datasource: [ testDatasource ],
+        entityFactory: real => real + '_modifier',
+      });
 
-    it('should resolve with Entity exemplar if EntityProvider was specified in constructot', () => {
-      // @todo: move to extednal describe
+      return repository.get('id')
+        .then(data => expect(data).toEqual('value_modifier'));
     });
   });
 
   describe('#set', () => {
     const testDatasource = new InMemoryDatasource();
-    const readOnlyDatasource = new FileRDatasource(path.join(__dirname, './fixtures/read-only-data.json'));
 
-    it('should always return Promise', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
+    it('should delegate to Datasource::set() method', () => {
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'set').andCallThrough();
 
-      const result = repository.set('id');
-      epect(result).toBeA(Promise);
+      return repository.set('id2', 'value2')
+        .then(() => expect(spy).toHaveBeenCalledWith('id2', 'value2'));
     });
 
-    it('should resolve with ID if value was saved correctly', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
+    it('should delegate to WriteFirst datasource with maximum writePriority property', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 3,
+      });
 
-      return repository.set('id1', 'value1')
-        .then(value => expect(value).toEqual('id1'))
-        .then(() => testDatasource.get('id1'))
-        .then(value => expect(value).toEqual('value1'));
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
+      
+      return repository.set('id2', 'value2')
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(lowPrioritySpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
+          expect(data).toEqual('id2');
+        });
     });
 
-    it('should resolve with null if value was not saved', () => {
-      const repository = new Repository({ datasource: [ readOnlyDatasource ] });
+    it('should try to delegate to other datasources if requested one fails', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new BrokenDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 3,
+      });
 
-      return repository.set('id1', 'value1')
-        .then(value => expect(value).toEqual(null));
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
+      
+      return repository.set('id2', 'value2')
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
+          expect(lowPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
+          expect(data).toEqual('id2');
+        });
     });
 
-    it('should set value to WriteFirst datasource with minimal writePriority property', () => {
-      // @todo: move to extednal describe
+    it('should delegate to every WriteAlways datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const writeAlwaysDatasource1 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+      });
+      const writeAlwaysDatasource2 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        writeAlwaysDatasource1,
+        writeAlwaysDatasource2
+      ] });
+
+      const spy1 = expect.spyOn(writeAlwaysDatasource1, 'set').andCallThrough();
+      const spy2 = expect.spyOn(writeAlwaysDatasource2, 'set').andCallThrough();
+      
+      return repository.set('id2', 'value2')
+        .then(() => {
+          expect(spy1).toHaveBeenCalledWith('id2', 'value2');
+          expect(spy2).toHaveBeenCalledWith('id2', 'value2');
+        });
     });
 
-    it('should set value to every WriteAlways datasource', () => {
-      // @todo: move to extednal describe
+    it('should ignore writePriority property for WriteAlways datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+        writePriority: 3,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
+      
+      return repository.set('id2', 'value2')
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(lowPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
+          expect(data).toEqual('id2');
+        });
     });
 
-    it('should not set value to any of NoWrite datasource', () => {
-      // @todo: move to extednal describe
+    it('should not delegate to any of NoWrite datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const noWriteDatasource1 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
+      });
+      const noWriteDatasource2 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
+        writePriority: 100500,
+      });
+
+      const repository = new Repository({ datasource: [
+        noWriteDatasource1,
+        noWriteDatasource2,
+        defaultDatasource
+      ] });
+
+      const spy1 = expect.spyOn(noWriteDatasource1, 'set').andCallThrough();
+      const spy2 = expect.spyOn(noWriteDatasource2, 'set').andCallThrough();
+      const spy3 = expect.spyOn(defaultDatasource, 'set').andCallThrough();
+
+      return repository.set('id2', 'value2')
+        .then(() => {
+          expect(spy1).toNotHaveBeenCalled();
+          expect(spy2).toNotHaveBeenCalled();
+          expect(spy3).toHaveBeenCalledWith('id2', 'value2');
+        });
     });
   });
 
-  describe('#del', () => {
-    it('should always return Promise', () => {
-      // @todo: do it one time for all methods
+  describe.skip('#delete', () => {
+    it('should delegate to Datasource::set() method', () => {
+      const testDatasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'delete').andCallThrough();
+
+      return repository.delete('id')
+        .then(() => expect(spy).toHaveBeenCalledWith('id'));
     });
 
-    it('should remove value with specified id', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
+    it('shoudl delegate to every datasource except NoWrite datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 2,
+      });
+      const noWtiteDatasorce = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
+      });
+      const writeAlwaysDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+      });
 
-      return repository.set('sould-be-removed', 'string')
-        .then(() => repository.get('sould-be-removed'))
-        .then(value => expect(value).toExist())
-        .then(() => repository.del('sould-be-removed'))
-        .then(() => repository.get('sould-be-removed'))
-        .then(() => expect(value).toEqual(null));
-    });
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource,
+        noWtiteDatasorce,
+        writeAlwaysDatasource,
+      ] });
 
-    it('should resolve with true if value was removed', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
-    
-      return repository.set('sould-be-removed', 'string')
-        .then(() => repository.get('sould-be-removed'))
-        .then(value => expect(value).toExist())
-        .then(() => repository.del('sould-be-removed'))
-        .then(result => expect(result).toEqual(true));
-    });
+      const noWriteSpy = expect.spyOn(noWtiteDatasorce, 'delete').andCallThrough();
+      const expectebleSpyes = [
+        expect.spyOn(defaultDatasource, 'delete').andCallThrough(),
+        expect.spyOn(lowPriorityDatasource, 'delete').andCallThrough(),
+        expect.spyOn(hightPriorityDatasource, 'delete').andCallThrough(),
+        expect.spyOn(writeAlwaysDatasource, 'delete').andCallThrough(),
+      ];
 
-    it('should resolve with false if value was not removed', () => {
-      const repository = new Repository({ datasource: [ testDatasource ] });
-    
-      return repository.get('sould-be-removed')
-        .then(value => expect(value).toEqual(null))
-        .then(() => repository.del('sould-be-removed'))
-        .then(result => expect(result).toEqual(false));
-    });
-
-    it('should reject if error occurs while removing', () => {
-      // @todo: do it one time for all methods
-    });
-  });
-
-  describe('#find', () => {
-    it('should alwasy return Promise', () => {
-      // @todo: do it one time for all methods
-    });
-
-    it('should list all records of the datasource if * is specified', () => {
-      const datasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [ datasource ] });
-
-      repository.set()      
-
+      return repository.delete('id')
+        .then((resolution) => {
+          expect(noWriteSpy).toNotHaveBeenCalled();
+          expectebleSpyes.forEach(spy => expect(spy).toHaveBeenCalledWith('id'));
+        });
     });
   });
 
-  describe('#mset', () => {
-    it('should always return Promise', () => {});
-    it('should accept list of IDs and list of values as a parameters', () => {});
-    it('should resolve a list of IDs that were set', () => {});
-    it('should resolve null instead of ID if value was not set', () => {});
-    it('should set values to WriteFirst datasource with minimal writePriority property', () => {});
-    it('should set values to every WriteAlways datasource', () => {});
-    it('should not set values to any of NoWrite datasource', () => {});
+  describe.skip('#getall', () => {
+    it('should delegate to Datasource::getall() method', () => {
+      const testDatasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'getall').andCallThrough();
+
+      return repository.getall()
+        .then(() => expect(spy).toHaveBeenCalled());
+    });
+
+    it('should merge all data from datasources with respect to readPriority', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      const hightPriorityDatasource = new InMemoryDatasource(null, { readPriority: 3 });
+
+      defaultDatasource.set('default', true);
+      defaultDatasource.set('hight', false);
+
+      lowPriorityDatasource.set('hight', false);
+      lowPriorityDatasource.set('low', true);
+
+      hightPriorityDatasource.set('hight', true);
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityBrokenDatasource
+      ] });
+
+      repository.getall()
+        .then(data => expect(data).toEqual({
+          hight: true,
+          low: true,
+          default: true,
+        }));
+    });
   });
 
-  describe('#mget', () => {
-    it('should always return Promise', () => {});
-    it('should accept list of IDs and list of values as a parameters', () => {});
-    it('should resolve multiple entities by specified list of IDs', () => {});
-    it('should resolve null for every ID that is not present in datasource', () => {});
-    it('should reuse #get method multiple times if #mget is not specified for a datasource', () => {});
-    it('should resolve with multiple entities from Datasorce with minimal readPriority property', () => {});
-    it('should try to read all Datasources if requested one fails', () => {});
-    it('should resolve with Entity exemplar if EntityProvider was specified in constructot', () => {});
+  describe.skip('#find', () => {
+    it('should delegate to Datasource::find() method', () => {
+      const testDatasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'find').andCallThrough();
+
+      return repository.find(/.*/)
+        .then(() => expect(spy).toHaveBeenCalledWith(/.*/));
+    });
+
+    it('should delegate to Datasource::getall() methid if Datasource::find() is not implemented', () => {
+      const testDatasource = new InMemoryDatasource();
+      testDatasource.find = undefined;
+
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'getall').andCallThrough();
+
+      return repository.find(/.*/)
+        .then(() => expect(spy).toHaveBeenCalled());
+    });
+
+    it('should merge all data from datasources with respect to readPriority', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      const hightPriorityDatasource = new InMemoryDatasource(null, { readPriority: 3 });
+
+      defaultDatasource.set('default', true);
+      defaultDatasource.set('hight', false);
+
+      lowPriorityDatasource.set('hight', false);
+      lowPriorityDatasource.set('low', true);
+
+      hightPriorityDatasource.set('hight', true);
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityBrokenDatasource
+      ] });
+
+      repository.find(/.*/)
+        .then(data => expect(data).toEqual({
+          hight: true,
+          low: true,
+          default: true,
+        }));
+    });
   });
 
-  describe('#mdel', () => {
-    it('should always return a Promise', () => {});
-    it('should accept list of IDs and list of values as a parameters', () => {});
-    it('should resolve with reports of every delete operator', () => {});
-    it('should resolve with true if value was removed', () => {});
-    it('should resolve with false if value was not removed', () => {});
+  describe.skip('#mset', () => {
+    it('should delegate to Datasource::mset() method', () => {
+      const testDatasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'mset').andCallThrough();
+
+      return repository.mset({ id2: 2, id3: 3 })
+        .then(() => expect(spy).toHaveBeenCalledWith({ id2: 2, id3: 3 }));
+    });
+
+    it('should delegate to multiple #set() methods if #mset is not implemented', () => {
+      const testDatasource = new InMemoryDatasource();
+      testDatasource.mset = undefined;
+
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'set').andCallThrough();
+
+      return repository.mset({ id1: 1, id2: 2, id3: 3 })
+        .then(() => {
+          expect(spy.calls.length).toEqual(3);
+          spy.calls.forEach((call, index) => {
+            const num = index + 1;
+            expect(call.arguments).toEqual([ `id${num}`, num ]);
+          });
+        });
+    });
   });
 
-  describe('#sync', () => {
-    it('should always return Promise', () => {});
-    it('should resolve when sync finished', () => {});
-    it('should reject if sync failed', () => {}); 
+  describe.skip('#mget', () => {
+    it('should delegate to Datasource::mget() method', () => {
+      const testDatasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'mget').andCallThrough();
+
+      return repository.mget(['id2', 'id3'])
+        .then(() => expect(spy).toHaveBeenCalledWith(['id2', 'id3']));
+    });
+
+    it('should delegate to multiple #get() methods if #mget is not implemented', () => {
+      const testDatasource = new InMemoryDatasource();
+      testDatasource.mget = undefined;
+
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'get').andCallThrough();
+
+      return repository.mget(['id1', 'id2', 'id3'])
+        .then(() => {
+          expect(spy.calls.length).toEqual(3);
+          spy.calls.forEach((call, index) => {
+            expect(call.arguments).toEqual([ `id${index + 1}` ]);
+          });
+        });
+    });
   });
 
-  describe('SyncStrategy', () => {
+  describe.skip('#mdelete', () => {
+    it('should delegate to Datasource::mdelete() method', () => {
+      const testDatasource = new InMemoryDatasource();
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'mdelete').andCallThrough();
+
+      return repository.mdelete(['id2', 'id3'])
+        .then(() => expect(spy).toHaveBeenCalledWith(['id2', 'id3']));
+    });
+
+    it('should delegate to multiple #delete() methods if #mdelete is not implemented', () => {
+      const testDatasource = new InMemoryDatasource();
+      testDatasource.mdelete = undefined;
+
+      const repository = new Repository({ datasource: [testDatasource] });
+      const spy = expect.spyOn(testDatasource, 'delete').andCallThrough();
+
+      return repository.mdelete(['id1', 'id2', 'id3'])
+        .then(() => {
+          expect(spy.calls.length).toEqual(3);
+          spy.calls.forEach((call, index) => {
+            expect(call.arguments).toEqual([ `id${index + 1}` ]);
+          });
+        });
+    });
+  });
+
+  describe.skip('#sync', () => {
+    it('it should resolve when sync process is finished', () => {
+      const context = {};
+      const dskeys = ['one', 'two', 'four'];
+
+      const datasources = dskeys.map((dsid) => {
+        const ds = new InMemoryDatasource();
+        ds.mset = undefined;
+        ds.set = () => new Promise((resolve) => {
+          context[key] = true;
+          resolve(true);
+        });
+      });
+
+      const repository = new Repository({ datasource: datasources });
+
+      repository.sync()
+        .then((report) => {
+          expect(context.toIncludeKeys(dskeys));
+          expect(Object.keys(context).length).toEqual(dskeys.length);
+          dskeys.forEach(key => expect(context[key]).toEqual(true));
+        });
+    });
+  });
+
+  describe.skip('SyncStrategy', () => {
 
     describe('SYNC_ON_TIMEOUT', () => {
 

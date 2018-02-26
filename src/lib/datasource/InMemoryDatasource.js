@@ -6,8 +6,8 @@ const undefinedToNull = (value) =>
     value === undefined ? null : value;
 
 class InMemoryDatasource extends Datasource{
-    constructor() {
-        super();
+    constructor(_, options) {
+        super(options);
         this.storageMap = new Map();
     }
 
@@ -16,7 +16,7 @@ class InMemoryDatasource extends Datasource{
      * @param key 
      */
     get(key) {
-        return Promise.resolve(this.storageMap.get(key))
+        return Promise.resolve(this.storageMap.get(key));
     }
 
     /**

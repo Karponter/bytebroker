@@ -2,10 +2,10 @@
 const fs = require('fs');
 const Datasource = require('../Datasource');
 
-class FileReadDataSource extends Datasource {
+class FileReadDatasource extends Datasource {
     
-    constructor(fileName) {
-        super();
+    constructor(fileName, options) {
+        super(options);
         this.fileName = fileName;
     }
 
@@ -57,4 +57,4 @@ class FileReadDataSource extends Datasource {
 
 } 
 
-module.exports = FileReadDataSource;
+module.exports = FileReadDatasource;
