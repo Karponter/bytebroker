@@ -37,18 +37,15 @@ describe Datasource
 
   describe #mset
   
-    it should accept list of IDs and list of values as a parameters
+    it should accept dictionary of IDs to values as a parameters
     it should resolve a list of IDs that were set
     it should resolve null instead of ID if value was not set
 
   describe #mget
 
-    it should accept list of IDs and list of values as a parameters
+    it should accept list of IDs as a parameters
     it should resolve multiple entities by specified list of IDs
     it should resolve null for every ID that is not present in datasource
-    it should resolve with multiple entities from Datasorce with minimal readPriority property
-    it should try to read all Datasources if requested one fails
-    it should resolve with Entity exemplar if EntityProvider was specified in constructot
 
   describe #mdel
 

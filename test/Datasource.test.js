@@ -4,6 +4,10 @@ const fs = require('fs');
 const FileReadWriteDataSource = require('../src/lib/datasource/FileReadWriteDataSource');
 
 let dataSource, brokenDataSource, nonExistantDataSource, emptyDataSource;
+let fixtureObject = {
+  model: 'IPhone',
+  brand: 'Apple'
+}
 
 describe('Test all datasouses from ../src/lib/datasouce', () => {
   before(() => {
@@ -111,6 +115,73 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
           expect(res).toEqual('value1'); 
           return emptyDataSource.delete('key')
         });
+    });
+  });
+
+  describe('#mget', () => {
+    it.skip('should accept list of IDs as a parameters', () => {
+
+    });
+    
+    it('should resolve multiple entities by specified list of IDs', () => {
+      return dataSource.mget(['city']).then((res) => {
+        expect(res).toBeAn(Array);
+      })
+    });
+
+    it('should resolve null for every ID that is not present in datasource', () => {
+      return dataSource.mget(['Kyiv']).then((res) => {
+        expect(res[0]).toEqual(null);
+      })
+    });
+
+  });
+
+  describe('#mset', () => {
+    it.skip('should accept dictionary of IDs to values as a parameters', () => {
+      expect(false).toEqual(true);
+    });
+
+    it('should resolve a list of IDs that were set', () => {
+      return dataSource.mset(fixtureObject).then((res) => {
+        expect(res).toEqual(Object.keys(fixtureObject));
+      })
+    });
+
+    it.skip('should resolve null instead of ID if value was not set', () => {
+      
+    });
+  });
+
+  describe('#mdel', () => {
+    it.skip('should accept list of IDs and list of values as a parameters', () => {
+      expect(false).toEqual(true);
+    });
+
+    it('should resolve with reports of every delete operator', () => {
+      return dataSource.mdelete(Object.keys(fixtureObject))
+      .then((res) => {
+        expect(Object.keys(fixtureObject)).toEqual(Object.keys(res));
+      })
+    });
+
+    it('should resolve with true if value was removed', () => {
+      return dataSource.mset(fixtureObject)
+        .then(() => dataSource.mdelete(Object.keys(fixtureObject)))
+        .then((res) => {
+          Object.keys(fixtureObject).forEach(key => {
+            expect(res[key]).toEqual(true);
+          });
+        })
+    });
+
+    it('should resolve with false if value was not removed', () => {
+      return dataSource.mdelete(Object.keys(fixtureObject))
+        .then((res) => {
+          Object.keys(fixtureObject).forEach(key => {
+            expect(res[key]).toEqual(false);
+          });
+        })
     });
   })
 })

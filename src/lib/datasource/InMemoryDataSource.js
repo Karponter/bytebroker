@@ -1,6 +1,10 @@
 'use strict';
 const Datasource = require('../Datasource');
 
+
+const undefinedToNull = (value) => 
+    value === undefined ? null : value;
+
 class InMemoryDatasource extends Datasource{
     constructor() {
         super();
@@ -30,6 +34,36 @@ class InMemoryDatasource extends Datasource{
      */
     delete(key) {
         return Promise.resolve(this.storageMap.delete(key));
+    }
+
+    /**
+     * 
+     * @param {*} keysArray 
+     */
+    mget(keysArray) {
+        return Promise.resolve( keysArray.map((key) => this.storageMap.get(key))
+                                            .map(undefinedToNull));
+    }
+
+    /**
+     * 
+     * @param {*} incomingObject 
+     */
+    mset(incomingObject) {
+        const incomingObjectKeys = Object.keys(incomingObject);
+        incomingObjectKeys.forEach((key) => {
+            this.storageMap.set(key, incomingObject[key]);
+        })
+        return Promise.resolve(incomingObjectKeys);
+    }
+
+    /**
+     * 
+     * @param {*} keysArray 
+     */
+    mdelete(keysArray) {
+        return Promise.resolve(keysArray.map((key) => ({key: this.storageMap.delete(key)})));
+
     }
 }
 module.exports = InMemoryDatasource;
