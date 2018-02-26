@@ -47,7 +47,7 @@ class Repository {
       .filter(ds => ds.writeMode === Datasource.WRITE_MODE.WRITE_FIRST)
       .sort((a, b) => {
         if (a.writePriority === b.writePriority) return 0;
-        return a.writePriority - b.writePriority;
+        return b.writePriority - a.writePriority;
       });
 
     this.writeAlwaysDatasourceGroup = this.datasourceStack
@@ -85,7 +85,7 @@ class Repository {
 
   /**
    * Get an entity from a Repository.
-   * Perdorms lookup over registered Datasources with respect ro readPriority of those.
+   * Performs lookup over registered Datasources with respect ro readPriority of those.
    * Attempts to read data from a Datasource with a maximum readPriority.
    * Value is mapped with emtityFactory if the one is specified in constructor.
    * 
@@ -102,8 +102,30 @@ class Repository {
       defer.then(data => this.entityFactory(data)) : defer;
   }
 
-  set() {
-    return Promise.resolve();
+  /**
+   * Save entity within a Repository.
+   * Saves data to every WRITE_ALWAYS Datasource
+   * Saves data to a single WRITE_FIRST Datasource with a maximum writePriority property
+   * Skips NO_WRITE datasource
+   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen
+   * 
+   * @param {any} id    -- identifier of etity to save
+   * @param {any} value -- value to be saved
+   * @return {Promise}  -- resolves with an identifier of saved entity or null if entity wasn't saved
+   */
+  set(id, value) {
+    const writeAlwaysDefer = Promise.all(this.writeAlwaysDatasourceGroup.map(ds =>
+      ds.set(id, value)));
+    const writeFirstDefer = this.writeFirstDatasourceGroup.reduce((acc, datasource) => acc
+      .then((result) => attempt(result, () => datasource.set(id, value)))
+      .catch((error) => attempt(null, () => datasource.set(id, value))),
+    Promise.resolve(null));
+
+    return Promise.all([writeFirstDefer, writeAlwaysDefer])
+      .then((report) => {
+        if (report[0]) return id;
+        return report[1].some(setterReport => !!setterReport) ? id : null;
+      })
   }
 
   delete() {

@@ -4,6 +4,7 @@ const ireq = require('../src/ireq');
 const expect = require('expect');
 
 const Repository = ireq.lib('./Repository');
+const Datasource = ireq.lib('./Datasource');
 const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
@@ -150,7 +151,7 @@ describe('Repository', () => {
     });
   });
 
-  describe.skip('#set', () => {
+  describe('#set', () => {
     const testDatasource = new InMemoryDatasource();
 
     it('should delegate to Datasource::set() method', () => {
@@ -164,41 +165,11 @@ describe('Repository', () => {
     it('should delegate to WriteFirst datasource with maximum writePriority property', () => {
       const defaultDatasource = new InMemoryDatasource();
       const lowPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
         writePriority: 1,
       });
       const hightPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
-        writePriority: 3,
-      });
-
-      const repository = new Repository({ datasource: [
-        defaultDatasource,
-        lowPriorityDatasource,
-        hightPriorityDatasource
-      ] });
-
-      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andReturn(Promise.resolve('result-checker'));
-      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
-      const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
-      
-      return repository.set('id2', 'value2')
-        .then((data) => {
-          expect(defaultSpy).toNotHaveBeenCalled();
-          expect(lowPrioritySpy).toNotHaveBeenCalled();
-          expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
-          expect(data).toEqual('result-checker');
-        });
-    });
-
-    it('should delegate to WriteFirst datasource with maximum writePriority property', () => {
-      const defaultDatasource = new InMemoryDatasource();
-      const lowPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
-        writePriority: 1,
-      });
-      const hightPriorityDatasource = new BrokenDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
         writePriority: 3,
       });
 
@@ -209,25 +180,55 @@ describe('Repository', () => {
       ] });
 
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
-      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andReturn(Promise.resolve('result-checker'));
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
       
       return repository.set('id2', 'value2')
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
-          expect(hightPrioritySpy).toNotHaveBeenCalled();
+          expect(lowPrioritySpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
+          expect(data).toEqual('id2');
+        });
+    });
+
+    it('should try to delegate to other datasources if requested one fails', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new BrokenDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 3,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
+      
+      return repository.set('id2', 'value2')
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
           expect(lowPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
-          expect(data).toEqual('result-checker');
+          expect(data).toEqual('id2');
         });
     });
 
     it('should delegate to every WriteAlways datasource', () => {
       const defaultDatasource = new InMemoryDatasource();
       const writeAlwaysDatasource1 = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_ALWAYS,
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
       });
       const writeAlwaysDatasource2 = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_ALWAYS,
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
       });
 
       const repository = new Repository({ datasource: [
@@ -249,11 +250,11 @@ describe('Repository', () => {
     it('should ignore writePriority property for WriteAlways datasource', () => {
       const defaultDatasource = new InMemoryDatasource();
       const lowPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
         writePriority: 1,
       });
       const hightPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_ALWAYS,
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
         writePriority: 3,
       });
 
@@ -263,10 +264,8 @@ describe('Repository', () => {
         hightPriorityDatasource
       ] });
 
-      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough()
-        .andReturn(Promise.resolve('wrong-value'));
-      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough()
-        .andReturn(Promise.resolve('correct-value'));
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
       
       return repository.set('id2', 'value2')
@@ -274,17 +273,17 @@ describe('Repository', () => {
           expect(defaultSpy).toNotHaveBeenCalled();
           expect(lowPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
           expect(hightPrioritySpy).toHaveBeenCalledWith('id2', 'value2');
-          expect(data).toEqual('correct-value');
+          expect(data).toEqual('id2');
         });
     });
 
     it('should not delegate to any of NoWrite datasource', () => {
       const defaultDatasource = new InMemoryDatasource();
       const noWriteDatasource1 = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.NO_WRITE,
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
       });
       const noWriteDatasource2 = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.NO_WRITE,
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
         writePriority: 100500,
       });
 
@@ -320,18 +319,18 @@ describe('Repository', () => {
     it('shoudl delegate to every datasource except NoWrite datasource', () => {
       const defaultDatasource = new InMemoryDatasource();
       const lowPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
         writePriority: 1,
       });
       const hightPriorityDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_FIRST,
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
         writePriority: 2,
       });
       const noWtiteDatasorce = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.NO_WRITE,
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
       });
       const writeAlwaysDatasource = new InMemoryDatasource(null, {
-        writeMode: Datasource.WRIE_MODE.WRITE_ALWAYS,
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
       });
 
       const repository = new Repository({ datasource: [

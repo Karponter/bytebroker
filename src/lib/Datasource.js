@@ -1,9 +1,9 @@
 'use strict';
 
 const WRITE_MODE = {
-  NO_WRITE: 0,
-  WRITE_FIRST: 1,
-  WRITE_ALWAYS: 2,
+  NO_WRITE: 1,
+  WRITE_FIRST: 2,
+  WRITE_ALWAYS: 3,
 };
 
 class Datasource {
