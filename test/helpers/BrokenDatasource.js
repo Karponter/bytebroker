@@ -5,6 +5,10 @@ const Datasource = ireq.lib('./Datasource');
 
 class BrokenDatasource extends Datasource {
 
+  constructor(_, options) {
+    super(options);
+  }
+
   get() {
     return Promise.reject(new Error());
   }

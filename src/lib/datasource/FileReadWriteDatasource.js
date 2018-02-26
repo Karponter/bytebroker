@@ -4,9 +4,6 @@ const FileReadDatasource = require('./FileReadDatasource');
 const Datasource = require('../Datasource')
 
 class FileReadWriteDatasource extends FileReadDatasource {
-    constructor(filename) {
-        super(filename);
-    }
     
     /**
      * 

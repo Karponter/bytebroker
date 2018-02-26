@@ -1,11 +1,15 @@
 'use strict';
 
 const ireq = require('ireq');
+const assert = require('assert');
 
 const { InMemoryDatasource } = ireq.lib.datasource('');
 const Datasource = ireq.lib('./Datasource');
 
-const assert = require('assert');
+const attempt = (value, action) => {
+  if (value !== null) return value;
+  return action();
+};
 
 class Repository {
 
@@ -30,10 +34,24 @@ class Repository {
       options.datasource.forEach(ds =>
         assert(ds instanceof Datasource));
       // shallow copy optional array to prevent side-effects from outside
-      this.datasourceStack = options.datasource.slice(0);
+      this.datasourceStack = options.datasource.slice(0)
+        .sort((a, b) => {
+          if (a.readPriority === b.readPriority) return 0;
+          return b.readPriority - a.readPriority;
+        });
     } else {
       this.datasourceStack = [new InMemoryDatasource()];
     }
+
+    this.writeFirstDatasourceGroup = this.datasourceStack
+      .filter(ds => ds.writeMode === Datasource.WRITE_MODE.WRITE_FIRST)
+      .sort((a, b) => {
+        if (a.writePriority === b.writePriority) return 0;
+        return a.writePriority - b.writePriority;
+      });
+
+    this.writeAlwaysDatasourceGroup = this.datasourceStack
+      .filter(ds => ds.writeMode === Datasource.WRITE_MODE.WRITE_ALWAYS);
 
     // entityFactory option processing
     this.entityFactory = null;
@@ -65,9 +83,23 @@ class Repository {
     //   .then()
   }
 
+  /**
+   * Get an entity from a Repository.
+   * Perdorms lookup over registered Datasources with respect ro readPriority of those.
+   * Attempts to read data from a Datasource with a maximum readPriority.
+   * Value is mapped with emtityFactory if the one is specified in constructor.
+   * 
+   * @param  {any} id   -- identifier of etity to get
+   * @return {Promise}  -- resolves with a requested entity or null  
+   */
+  get(id) {
+    const defer = this.datasourceStack.reduce((acc, datasource) => acc
+      .then((result) => attempt(result, () => datasource.get(id)))
+      .catch((error) => attempt(null, () => datasource.get(id))),
+    Promise.resolve(null));
 
-  get() {
-    return Promise.resolve();
+    return this.entityFactory ? 
+      defer.then(data => this.entityFactory(data)) : defer;
   }
 
   set() {

@@ -2,8 +2,8 @@
 const Datasource = require('../Datasource');
 
 class InMemoryDatasource extends Datasource {
-    constructor() {
-        super();
+    constructor(_, options) {
+        super(options);
         this.storageMap = new Map();
     }
 
@@ -12,7 +12,7 @@ class InMemoryDatasource extends Datasource {
      * @param key 
      */
     get(key) {
-        return Promise.resolve(this.storageMap.get(key))
+        return Promise.resolve(this.storageMap.get(key));
     }
 
     /**
