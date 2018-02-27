@@ -89,7 +89,7 @@ class Repository {
    * Saves data to every WRITE_ALWAYS Datasource
    * Saves data to a single WRITE_FIRST Datasource with a maximum writePriority property
    * Skips NO_WRITE datasource
-   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen
+   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
    * 
    * @param {any} id    -- identifier of etity to save
    * @param {any} value -- value to be saved
@@ -113,7 +113,7 @@ class Repository {
   /**
    * Delete entity from a Repository.
    * Removes data from each datasource except those that marked as NO_WRITE.
-   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen
+   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
    * 
    * @param  {any} id     -- identifier of entity to remove
    * @return {Promise}    -- resolves with true if removal operation was performed and false if it wasn't
