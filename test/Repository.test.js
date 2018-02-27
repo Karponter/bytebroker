@@ -306,8 +306,8 @@ describe('Repository', () => {
     });
   });
 
-  describe.skip('#delete', () => {
-    it('should delegate to Datasource::set() method', () => {
+  describe('#delete', () => {
+    it('should delegate to Datasource::delete() method', () => {
       const testDatasource = new InMemoryDatasource();
       const repository = new Repository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'delete').andCallThrough();

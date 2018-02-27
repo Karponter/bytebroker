@@ -11,6 +11,8 @@ const attempt = (value, action) => {
   return action();
 };
 
+const isTruthly = value => !!value;
+
 class Repository {
 
   /**
@@ -63,26 +65,6 @@ class Repository {
     this.errorPeocessingStrategy = 0;
   }
 
-  _shiftDownCache() {
-    this.syncCache.find('*')
-      .then(this._shiftDownData)
-      .then(haystack => haystack.filter(value => value !== null))
-      .then(this.syncCache.mdel);
-  }
-
-  _shiftDownData(dataMap) {
-
-    const shiftAsyncDatasources = this.datasourceStack.filter(datasource =>
-      datasource.writePriority === Datasource.WRITE_ALWAYS);
-
-    const shiftSyncDatasources = this.datasourceStack.filter(datasource =>
-      datasource.writePriority === Datasource.WRITE_FFIRST);
-
-    // ################
-    // promiseReduceRace(shiftSyncDatasources.map())
-    //   .then()
-  }
-
   /**
    * Get an entity from a Repository.
    * Performs lookup over registered Datasources with respect ro readPriority of those.
@@ -124,12 +106,23 @@ class Repository {
     return Promise.all([writeFirstDefer, writeAlwaysDefer])
       .then((report) => {
         if (report[0]) return id;
-        return report[1].some(setterReport => !!setterReport) ? id : null;
+        return report[1].some(isTruthly) ? id : null;
       })
   }
 
-  delete() {
-    return Promise.resolve();
+  /**
+   * Delete entity from a Repository.
+   * Removes data from each datasource except those that marked as NO_WRITE.
+   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen
+   * 
+   * @param  {any} id     -- identifier of entity to remove
+   * @return {Promise}    -- resolves with true if removal operation was performed and false if it wasn't
+   */
+  delete(id) {
+    return Promise.all(this.datasourceStack
+      .filter(ds => ds.writeMode !== Datasource.WRITE_MODE.NO_WRITE)
+      .map(ds => ds.delete(id)))
+    .then(operationReports => operationReports.some(isTruthly));
   }
 
   mget() {
