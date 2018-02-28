@@ -2,7 +2,7 @@
 const expect = require('expect');
 const fs = require('fs');
 // const FileReadWriteDataSource = require('../src/lib/datasource/FileReadWriteDataSource');
-const inMemoryDataSource = require('../src/lib/datasource/InMemoryDataSource');
+const inMemoryDataSource = require('../src/lib/datasource/InMemoryDatasource');
 let dataSource, brokenDataSource, nonExistantDataSource, emptyDataSource;
 let fixtureObject = {
   model: 'IPhone',
@@ -116,8 +116,20 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
   });
 
   describe('#mget', () => {
-    it.skip('should accept list of IDs as a parameters', () => {
-
+    it.only('should accept list of IDs as a parameters', () => {
+      const spy = expect.createSpy();
+      return dataSource.mdelete(fixtureObject)
+        .then(spy)
+        .catch((err) => {})
+        .then((res) => {
+          expect(spy).toNotHaveBeenCalled();
+          spy.restore();
+          return dataSource.mdelete(Object.keys(fixtureObject))
+            .then(spy)
+            .then((res) => {
+              expect(spy).toHaveBeenCalled();
+            })
+        })
     });
     
     it('should resolve multiple entities by specified list of IDs', () => {
@@ -142,7 +154,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
       expect(false).toEqual(true);
     });
 
-    it.only('should resolve a list of IDs that were set', () => {
+    it('should resolve a list of IDs that were set', () => {
       return dataSource.mset(fixtureObject).then((res) => {
         expect(res).toEqual(Object.keys(fixtureObject));
       })
@@ -154,8 +166,20 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
   });
 
   describe('#mdel', () => {
-    it.skip('should accept list of IDs and list of values as a parameters', () => {
-      expect(false).toEqual(true);
+    it('should accept list of IDs as a parameters', () => {
+      const spy = expect.createSpy();
+      return dataSource.mdelete(fixtureObject)
+        .then(spy)
+        .catch((err) => {})
+        .then((res) => {
+          expect(spy).toNotHaveBeenCalled();
+          spy.restore();
+          return dataSource.mdelete(Object.keys(fixtureObject))
+            .then(spy)
+            .then((res) => {
+              expect(spy).toHaveBeenCalled();
+            })
+        })
     });
 
     it('should resolve with reports of every delete operator', () => {
@@ -165,7 +189,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
       })
     });
 
-    it.only('should resolve with true if value was removed', () => {
+    it('should resolve with true if value was removed', () => {
       return dataSource.mset(fixtureObject)
         .then(() => dataSource.mdelete(Object.keys(fixtureObject)))
         .then((res) => {
@@ -175,7 +199,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
         })
     });
 
-    it.only('should resolve with false if value was not removed', () => {
+    it('should resolve with false if value was not removed', () => {
       return dataSource.mdelete(Object.keys(fixtureObject))
         .then((res) => {
           Object.keys(fixtureObject).forEach(key => {
