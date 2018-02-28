@@ -5,9 +5,7 @@ const Datasource = require('../Datasource')
 
 const undefinedToNull = (value) => value === undefined ? null : value;
 
-
-class FileReadWriteDatasource extends FileReadDatasource {
-    
+class FileReadWriteDatasource extends FileReadDatasource {    
     /**
      * 
      * @param {*} data 

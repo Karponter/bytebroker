@@ -42,8 +42,9 @@ class FileReadDatasource extends Datasource {
 
     mget(keysArray) {
         return this.readFile().then((fileData)=> {
-            return keysArray.map((key) => fileData[key])
-                            .map(undefinedToNull);
+                return keysArray
+                    .map((key) => fileData[key])
+                    .map(undefinedToNull);
         });
     }
 

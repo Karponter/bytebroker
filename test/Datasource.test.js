@@ -75,14 +75,8 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
   })
 
   describe('chaining', () => {
-    it('should return Promise and resolve with a null', () => {
-      return emptyDataSource.get('key').then((res) => {
-        expect(emptyDataSource.get('key')).toBeA(Promise);
-        expect(res).toEqual(null);  
-      });
-    });
 
-    it('set>get shoud return with seted value', () => {
+    it('set>get - shoud return with seted value', () => {
       return emptyDataSource.set('key', 'value')
         .then(() =>  emptyDataSource.get('key'))
         .then((res) => {
@@ -90,7 +84,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
         });
     });
 
-    it('set>get>delete shoud return with true', () => {
+    it('set>get>delete - shoud return with true', () => {
       return emptyDataSource.set('key', 'value')
         .then(() =>  emptyDataSource.get('key'))
         .then(() =>  emptyDataSource.delete('key'))
@@ -99,7 +93,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
         });
     });
 
-    it('set>get>delete>get shoud return with null', () => {
+    it('set>get>delete>get - shoud return with null', () => {
       return emptyDataSource.set('key', 'value')
         .then(() =>  emptyDataSource.get('key'))
         .then(() =>  emptyDataSource.delete('key'))
@@ -109,7 +103,7 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
         });
     });
 
-    it('set>get>set>get shoud return with second seted value', () => {
+    it('set>get>set>get - shoud return with second seted value', () => {
       return emptyDataSource.set('key', 'value')
         .then(() =>  emptyDataSource.get('key'))
         .then(() =>  emptyDataSource.set('key', 'value1'))
@@ -127,17 +121,20 @@ describe('Test all datasouses from ../src/lib/datasouce', () => {
     });
     
     it('should resolve multiple entities by specified list of IDs', () => {
-      return dataSource.mget(['city']).then((res) => {
-        expect(res).toBeAn(Array);
+      return dataSource
+        .mget(['city'])
+        .then((res) => {
+          expect(res).toBeAn(Array);
       })
     });
 
     it('should resolve null for every ID that is not present in datasource', () => {
-      return dataSource.mget(['Kyiv']).then((res) => {
-        expect(res[0]).toEqual(null);
+      return dataSource
+        .mget(['Kyiv'])
+        .then((res) => {
+          expect(res[0]).toEqual(null);
       })
     });
-
   });
 
   describe('#mset', () => {
