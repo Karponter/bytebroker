@@ -48,14 +48,6 @@ class FileReadDatasource extends Datasource {
         });
     }
 
-    mset(incomingObject) {
-        return Promise.resolve(null);
-    }
-
-    mdelete(keysArray) {
-        return Promise.resolve(null);
-    }
-
 } 
 
 module.exports = FileReadDatasource;

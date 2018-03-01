@@ -56,21 +56,6 @@ class FileReadWriteDatasource extends FileReadDatasource {
         });
     }
 
-    /**
-     * 
-     * @param {*} keysArray 
-     */
-    mget(keysArray) {
-        // todo: set some check if args is not an array
-       /* if(typeof keysArray !== 'Array') {
-            return Promise.reject(new Error('Error, parameter should be an array of ids'));
-        }*/   
-        return this.readFile().then((fileData)=> {
-            return keysArray.map((key) => fileData[key])
-                            .map(undefinedToNull);
-        });
-    }
-
     mset(incomingObject) {
         return this.readFile()
             .then((fileData)=> Object.assign(fileData, incomingObject))

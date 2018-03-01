@@ -41,9 +41,14 @@ class InMemoryDatasource extends Datasource{
      * @param {*} keysArray 
      */
     mget(keysArray) {
-        const resultArray =  keysArray.map((key) => this.storageMap.get(key))
-                                            .map(undefinedToNull);
-
+        let resultArray
+        try{
+            resultArray =  keysArray.map((key) => this.storageMap.get(key))
+            .map(undefinedToNull);
+        } catch(e) {
+            return Promise.reject(new Error(e));
+        }
+        
         return Promise.resolve(Object.assign({}, ...resultArray));
     }
 
@@ -64,7 +69,12 @@ class InMemoryDatasource extends Datasource{
      * @param {*} keysArray 
      */
     mdelete(keysArray) {
-        const resultArray = keysArray.map((key) => ({[key]: this.storageMap.delete(key)}));
+        let resultArray;
+        try{
+            resultArray = keysArray.map((key) => ({[key]: this.storageMap.delete(key)}));        
+        } catch(e) {
+            return Promise.reject(new Error(e));
+        }
         return Promise.resolve(Object.assign({}, ...resultArray));
     }
 }
