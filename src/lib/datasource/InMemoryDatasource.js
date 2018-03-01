@@ -1,9 +1,7 @@
 'use strict';
 const Datasource = require('../Datasource');
+const undefinedToNull = require('../../utils/undefinedToNull')
 
-
-const undefinedToNull = (value) => 
-    value === undefined ? null : value;
 
 class InMemoryDatasource extends Datasource{
     constructor(_, options) {
