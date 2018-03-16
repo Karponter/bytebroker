@@ -40,6 +40,14 @@ class FileReadDatasource extends Datasource {
         return Promise.resolve(null);
     }
 
+    mget(keysArray) {
+        return this.readFile().then((fileData)=> {
+                return keysArray
+                    .map((key) => fileData[key])
+                    .map(undefinedToNull);
+        });
+    }
+
 } 
 
 module.exports = FileReadDatasource;

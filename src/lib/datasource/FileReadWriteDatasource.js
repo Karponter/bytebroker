@@ -3,8 +3,9 @@ const fs = require('fs');
 const FileReadDatasource = require('./FileReadDatasource');
 const Datasource = require('../Datasource')
 
-class FileReadWriteDatasource extends FileReadDatasource {
-    
+const undefinedToNull = (value) => value === undefined ? null : value;
+
+class FileReadWriteDatasource extends FileReadDatasource {    
     /**
      * 
      * @param {*} data 
@@ -55,6 +56,32 @@ class FileReadWriteDatasource extends FileReadDatasource {
         });
     }
 
+    mset(incomingObject) {
+        return this.readFile()
+            .then((fileData)=> Object.assign(fileData, incomingObject))
+            .then((fileData) => this.writeFile(fileData))
+            .then(() => Object.keys(incomingObject));           
+    }
+
+    mdelete(keysArray) {
+        // todo: set some check if args is not an array        
+        return this.readFile().then((fileData)=> {
+            let resultDictionary = {};
+            keysArray.forEach((key) => {
+                if(fileData[key] !== undefined) {
+                    resultDictionary[key] = true;
+                    fileData[key] = undefined;
+                } else {
+                    resultDictionary[key] = false;                    
+                }
+            });
+            return this.writeFile(fileData).then(() => resultDictionary);
+        });
+    }
+
+    getall() {
+        return this.readFile();
+    }
 } 
 
 module.exports = FileReadWriteDatasource;

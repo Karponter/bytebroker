@@ -1,7 +1,9 @@
 'use strict';
 const Datasource = require('../Datasource');
+const undefinedToNull = require('../../utils/undefinedToNull')
 
-class InMemoryDatasource extends Datasource {
+
+class InMemoryDatasource extends Datasource{
     constructor(_, options) {
         super(options);
         this.storageMap = new Map();
@@ -31,5 +33,48 @@ class InMemoryDatasource extends Datasource {
     delete(key) {
         return Promise.resolve(this.storageMap.delete(key));
     }
+
+    /**
+     * 
+     * @param {*} keysArray 
+     */
+    mget(keysArray) {
+        let resultArray
+        try{
+            resultArray =  keysArray.map((key) => this.storageMap.get(key))
+            .map(undefinedToNull);
+        } catch(e) {
+            return Promise.reject(new Error(e));
+        }
+        
+        return Promise.resolve(Object.assign({}, ...resultArray));
+    }
+
+    /**
+     * 
+     * @param {*} incomingObject 
+     */
+    mset(incomingObject) {
+        const incomingObjectKeys = Object.keys(incomingObject);
+        incomingObjectKeys.forEach((key) => {
+            this.storageMap.set(key, incomingObject[key]);
+        })
+        return Promise.resolve(incomingObjectKeys);
+    }
+
+    /**
+     * 
+     * @param {*} keysArray 
+     */
+    mdelete(keysArray) {
+        let resultArray;
+        try{
+            resultArray = keysArray.map((key) => ({[key]: this.storageMap.delete(key)}));        
+        } catch(e) {
+            return Promise.reject(new Error(e));
+        }
+        return Promise.resolve(Object.assign({}, ...resultArray));
+    }
 }
 module.exports = InMemoryDatasource;
+
