@@ -445,6 +445,12 @@ describe('Repository', () => {
   });
 
   describe('#mset', () => {
+
+    const msetFixture = {
+      id1: 'value1',
+      id2: 'value2',
+    };
+
     it('should delegate to Datasource::mset() method', () => {
       const testDatasource = new InMemoryDatasource();
       const repository = new Repository({ datasource: [testDatasource] });
@@ -454,11 +460,148 @@ describe('Repository', () => {
         .then(() => expect(spy).toHaveBeenCalledWith({ id2: 2, id3: 3 }));
     });
 
-    it.skip('should delegate to WriteFirst datasource with maximum writePriority property', () => {});
-    it.skip('should try to delegate to other datasources if requested one fails', () => {});
-    it.skip('should delegate to every WriteAlways datasource', () => {});
-    it.skip('should ignore writePriority property for WriteAlways datasource', () => {});
-    it.skip('should not delegate to any of NoWrite datasource', () => {});
+    it('should delegate to WriteFirst datasource with maximum writePriority property', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 3,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mset').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mset').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
+      
+      return repository.mset(msetFixture)
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(lowPrioritySpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith(msetFixture);
+          expect(data).toInclude(...Object.keys(msetFixture));
+        });
+    });
+
+    it('should try to delegate to other datasources if requested one fails', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new BrokenDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 3,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mset').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mset').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
+      
+      return repository.mset(msetFixture)
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith(msetFixture);
+          expect(lowPrioritySpy).toHaveBeenCalledWith(msetFixture);
+          expect(data).toInclude(...Object.keys(msetFixture));
+        });
+    });
+    
+    it('should delegate to every WriteAlways datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const writeAlwaysDatasource1 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+      });
+      const writeAlwaysDatasource2 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        writeAlwaysDatasource1,
+        writeAlwaysDatasource2
+      ] });
+
+      const spy1 = expect.spyOn(writeAlwaysDatasource1, 'mset').andCallThrough();
+      const spy2 = expect.spyOn(writeAlwaysDatasource2, 'mset').andCallThrough();
+      
+      return repository.mset(msetFixture)
+        .then(() => {
+          expect(spy1).toHaveBeenCalledWith(msetFixture);
+          expect(spy2).toHaveBeenCalledWith(msetFixture);
+        });
+    });
+
+    it('should ignore writePriority property for WriteAlways datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_FIRST,
+        writePriority: 1,
+      });
+      const hightPriorityDatasource = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
+        writePriority: 3,
+      });
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mset').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mset').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
+      
+      return repository.mset(msetFixture)
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(lowPrioritySpy).toHaveBeenCalledWith(msetFixture);
+          expect(hightPrioritySpy).toHaveBeenCalledWith(msetFixture);
+          expect(data).toInclude(...Object.keys(msetFixture));
+        });
+    });
+
+    it('should not delegate to any of NoWrite datasource', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const noWriteDatasource1 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
+      });
+      const noWriteDatasource2 = new InMemoryDatasource(null, {
+        writeMode: Datasource.WRITE_MODE.NO_WRITE,
+        writePriority: 100500,
+      });
+
+      const repository = new Repository({ datasource: [
+        noWriteDatasource1,
+        noWriteDatasource2,
+        defaultDatasource
+      ] });
+
+      const spy1 = expect.spyOn(noWriteDatasource1, 'mset').andCallThrough();
+      const spy2 = expect.spyOn(noWriteDatasource2, 'mset').andCallThrough();
+      const spy3 = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
+
+      return repository.mset(msetFixture)
+        .then(() => {
+          expect(spy1).toNotHaveBeenCalled();
+          expect(spy2).toNotHaveBeenCalled();
+          expect(spy3).toHaveBeenCalledWith(msetFixture);
+        });
+    });
 
     it('should delegate to multiple #set() methods if #mset is not implemented', () => {
       const testDatasource = new InMemoryDatasource();
