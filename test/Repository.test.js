@@ -405,7 +405,7 @@ describe('Repository', () => {
         .then(() => expect(spy).toHaveBeenCalledWith(/.*/));
     });
 
-    it('should delegate to Datasource::getall() methid if Datasource::find() is not implemented', () => {
+    it('should delegate to Datasource::getall() method if Datasource::find() is not implemented', () => {
       const testDatasource = new InMemoryDatasource();
       testDatasource.find = undefined;
 
@@ -444,7 +444,7 @@ describe('Repository', () => {
     });
   });
 
-  describe.skip('#mset', () => {
+  describe('#mset', () => {
     it('should delegate to Datasource::mset() method', () => {
       const testDatasource = new InMemoryDatasource();
       const repository = new Repository({ datasource: [testDatasource] });
@@ -453,6 +453,12 @@ describe('Repository', () => {
       return repository.mset({ id2: 2, id3: 3 })
         .then(() => expect(spy).toHaveBeenCalledWith({ id2: 2, id3: 3 }));
     });
+
+    it.skip('should delegate to WriteFirst datasource with maximum writePriority property', () => {});
+    it.skip('should try to delegate to other datasources if requested one fails', () => {});
+    it.skip('should delegate to every WriteAlways datasource', () => {});
+    it.skip('should ignore writePriority property for WriteAlways datasource', () => {});
+    it.skip('should not delegate to any of NoWrite datasource', () => {});
 
     it('should delegate to multiple #set() methods if #mset is not implemented', () => {
       const testDatasource = new InMemoryDatasource();

@@ -7,49 +7,80 @@ const fixtureObject = {
 
 const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments) => {
 
-  const datasource = new DatasourceDefinition(instantinationAarguments);
+  const createDatasource = () =>
+    new DatasourceDefinition(instantinationAarguments);
+
+  let datasource = createDatasource();
   const title = datasource.constructor.name;
 
   describe(`Testing integrity of ${title}`, () => {
-    describe('#get', ()=> {
-      it('should return Promise ', ()=> {
+
+    describe('#set', () => {
+      it('should return Promise ', () => {
+        expect(datasource.set('key', 'value')).toBeA(Promise);
+      });
+
+      it('should resolve with seted key', () => {
+        return datasource.set('key', 'value').then((res) => {
+          expect(res).toEqual('key');
+        });
+      });
+    });
+
+    describe('#get', () => {
+      it('should return Promise ', () => {
         expect(datasource.get()).toBeA(Promise);
       });
 
-      it('should resolve with null when key do not exist', ()=> {
+      it('should resolve with null when key do not exist', () => {
         return datasource.get('test').then((res) => {
           expect(res).toEqual(null);
         });
       });
 
-      it('should resolve with value for existing key', ()=> {
-        return datasource.get('city').then((res) => {
-          expect(res).toEqual('Kyiv');
-        });
+      it('should resolve with value for existing key', () => {
+        return datasource
+          .set('city', 'Kyiv')
+          .then(() => datasource.get('city'))
+          .then(res => expect(res).toEqual('Kyiv'));
       });
     });
     
-    describe('#set', ()=> {
-      it('should return Promise ', ()=> {
-        expect(datasource.set()).toBeA(Promise);
-      });
-
-      it('should resolve with seted key', ()=> {
-        return datasource.set('key', 'value').then((res) => {
-          expect(res).toEqual('key');  
-        });
-      });
-    });
-    
-    describe('#delete', ()=> {
-      it('should return Promise ', ()=> {
+    describe('#delete', () => {
+      it('should return Promise ', () => {
         expect(datasource.delete()).toBeA(Promise);
       });
 
-      it('should resolve with true', ()=> {
+      it('should resolve with true', () => {
         return datasource.delete('key').then((res) => {
           expect(res).toEqual(true);  
         });
+      });
+    });
+
+    describe('#getall', () => {
+      it('should return Promise ', () => {
+        expect(datasource.getall()).toBeA(Promise);
+      });
+
+      it('should resolve with list  of all available keys', () => {
+        const datasource = createDatasource();
+        return Promise.all([
+          datasource.set('key1', 'value1'),
+          datasource.set('key2', 'value2'),
+          datasource.set('weird-key', 'value3'),
+        ])
+          .then(() => datasource.getall())
+          .then(result => {
+            expect(result).toBeAn(Array);
+            expect(result).toEqual(['key1', 'key2', 'weird-key']);
+          });
+      });
+    });
+
+    describe('#find', () => {
+      it('should return Promise ', () => {
+        expect(datasource.find('')).toBeA(Promise);
       });
     });
 
@@ -74,7 +105,7 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
         return datasource
           .mget(['city'])
           .then((res) => {
-            expect(res).toBeAn(Array);
+            expect(res).toIncludeKeys(['city']);
         })
       });
 
@@ -93,9 +124,10 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
       });
 
       it('should resolve a list of IDs that were set', () => {
-        return datasource.mset(fixtureObject).then((res) => {
-          expect(res).toEqual(Object.keys(fixtureObject));
-        })
+        return datasource.mset(fixtureObject)
+          .then((res) => {
+            expect(res).toEqual(Object.keys(fixtureObject));
+          })
       });
 
       it.skip('should resolve null instead of ID if value was not set', () => {
@@ -128,8 +160,8 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
       });
 
       it('should resolve with true if value was removed', () => {
-        return magicClass.mset(fixtureObject)
-          .then(() => magicClass.mdelete(Object.keys(fixtureObject)))
+        return datasource.mset(fixtureObject)
+          .then(() => datasource.mdelete(Object.keys(fixtureObject)))
           .then((res) => {
             Object.keys(fixtureObject).forEach((key,index) => { 
               expect(res[key]).toEqual(true);

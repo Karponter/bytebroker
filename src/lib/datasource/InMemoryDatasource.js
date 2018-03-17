@@ -22,8 +22,9 @@ class InMemoryDatasource extends Datasource{
      * @param key 
      * @param value 
      */
-    set(key, value) {               
-        return Promise.resolve(this.storageMap.set(key, value));
+    set(key, value) {          
+        this.storageMap.set(key, value);     
+        return Promise.resolve(key);
     }
 
     /**
@@ -39,15 +40,14 @@ class InMemoryDatasource extends Datasource{
      * @param {*} keysArray 
      */
     mget(keysArray) {
-        let resultArray
-        try{
-            resultArray =  keysArray.map((key) => this.storageMap.get(key))
-            .map(undefinedToNull);
-        } catch(e) {
-            return Promise.reject(new Error(e));
-        }
+        const resultsList = keysArray
+            .map((key) => this.storageMap.get(key))
+            .map(undefinedToNull)
+            .map((value, index) => {
+                return {[keysArray[index]]: value};
+            });
         
-        return Promise.resolve(Object.assign({}, ...resultArray));
+        return Promise.resolve(Object.assign({}, ...resultsList));
     }
 
     /**

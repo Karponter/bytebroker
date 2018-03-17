@@ -107,7 +107,7 @@ class Repository {
       .then((report) => {
         if (report[0]) return id;
         return report[1].some(isTruthly) ? id : null;
-      })
+      });
   }
 
   /**
@@ -129,7 +129,33 @@ class Repository {
     return Promise.resolve();
   }
 
-  mset() {
+  /**
+   * Save multiple entities within a Repository.
+   * Mitigates #set logic fluently
+   * Use #set method directly if datasource have no mset implemented
+   * 
+   * @param  {Object(id => value)} payload -- represents values that should be saved under id
+   * @return {Promise}                   -- resolves with list of seted ids
+   */
+  mset(payload) {
+    const atomicMsetAction = (ds, payload) => {
+      return (ds.mset !== undefined) ? ds.mset(payload) :
+        Promise.all(Object.keys(payload).map(id => ds.set(id, payload[id])));
+    };
+
+    const writeAlwaysDefer = Promise.all(this.writeAlwaysDatasourceGroup.map((ds) =>
+      atomicMsetAction(ds, payload)));
+    const writeFirstDefer = this.writeFirstDatasourceGroup.reduce((acc, datasource) => acc
+      .then((result) => attempt(result, () => atomicMsetAction(datasource, payload)))
+      .catch((error) => attempt(null, () => atomicMsetAction(datasource, payload))),
+    Promise.resolve(null));
+
+    return Promise.all([writeFirstDefer, writeAlwaysDefer])
+      .then((report) => {
+
+        const resultingSet = new Set(report[0].concat(...report[1]));
+        return Array.from(resultingSet);
+      });
     return Promise.resolve();
   }
 
