@@ -71,7 +71,7 @@ class Repository {
    * Attempts to read data from a Datasource with a maximum readPriority.
    * Value is mapped with emtityFactory if the one is specified in constructor.
    * 
-   * @param  {any} id   -- identifier of etity to get
+   * @param  {any} id   -- identifier of entity to get
    * @return {Promise}  -- resolves with a requested entity or null  
    */
   get(id) {
@@ -91,7 +91,7 @@ class Repository {
    * Skips NO_WRITE datasource
    * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
    * 
-   * @param {any} id    -- identifier of etity to save
+   * @param {any} id    -- identifier of entity to save
    * @param {any} value -- value to be saved
    * @return {Promise}  -- resolves with an identifier of saved entity or null if entity wasn't saved
    */
@@ -125,8 +125,55 @@ class Repository {
     .then(operationReports => operationReports.some(isTruthly));
   }
 
-  mget() {
-    return Promise.resolve();
+  /**
+   * Get set of entities from a Repository.
+   * Performs lookup over registered Datasources with respect ro readPriority of those.
+   * Attempts to read data from a Datasource with a maximum readPriority.
+   * Value is mapped with emtityFactory if the one is specified in constructor.
+   * 
+   * @param  {Array<any>} ids   -- list of entity identifiers
+   * @return {Promise}          -- resolves with key-value mapping of ids to entities
+   */
+  mget(ids) {
+    const sufficienceSet = new Set(ids);
+
+    const atomicMgetAction = (ds, ids) => {
+      return (ds.mget !== undefined) ? ds.mget(ids) :
+        Promise.all(ids.map(id => ds.get(id)));
+    };
+
+    const datasourceMgetReducer = (acc, datasource, INDEX) => acc
+      .then((result) => {
+        const processedKeys = result ?
+          Object.keys(result).filter((key) => result[key] !== null) : [];
+        processedKeys.forEach(key => sufficienceSet.delete(key));
+
+        if (sufficienceSet.size <= 0) {
+          return Promise.resolve(result);
+        }
+
+        const furtherIds = Array.from(sufficienceSet);
+        const processedResult = processedKeys.reduce((acc, key) => {
+          acc[key] = result[key];
+          return acc;
+        }, {});
+
+        return atomicMgetAction(datasource, furtherIds)
+          .then((furtherResult) => Object.assign({}, furtherResult, processedResult));
+      })
+      .catch((error) => atomicMgetAction(datasource, ids))
+
+    const defer = this.datasourceStack.reduce(datasourceMgetReducer, Promise.resolve(null));
+
+    if (!this.entityFactory) {
+      return defer;
+    }
+
+    return defer.then((deferResult) => {
+      Object.keys(deferResult).forEach((key) =>
+        deferResult[key] = this.entityFactory(deferResult[key]));
+      return deferResult;
+    });
   }
 
   /**
@@ -134,8 +181,8 @@ class Repository {
    * Mitigates #set logic fluently
    * Use #set method directly if datasource have no mset implemented
    * 
-   * @param  {Object(id => value)} payload -- represents values that should be saved under id
-   * @return {Promise}                   -- resolves with list of seted ids
+   * @param  {Object<id => value>} payload  -- represents values that should be saved under id
+   * @return {Promise}                      -- resolves with list of seted ids
    */
   mset(payload) {
     const atomicMsetAction = (ds, payload) => {

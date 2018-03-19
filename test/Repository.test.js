@@ -445,7 +445,6 @@ describe('Repository', () => {
   });
 
   describe('#mset', () => {
-
     const msetFixture = {
       id1: 'value1',
       id2: 'value2',
@@ -621,7 +620,7 @@ describe('Repository', () => {
     });
   });
 
-  describe.skip('#mget', () => {
+  describe('#mget', () => {
     it('should delegate to Datasource::mget() method', () => {
       const testDatasource = new InMemoryDatasource();
       const repository = new Repository({ datasource: [testDatasource] });
@@ -629,6 +628,102 @@ describe('Repository', () => {
 
       return repository.mget(['id2', 'id3'])
         .then(() => expect(spy).toHaveBeenCalledWith(['id2', 'id3']));
+    });
+
+    it('should delegate to datasorce with maximum readPriority property', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      const hightPriorityDatasource = new InMemoryDatasource(null, { readPriority: 3 });
+      hightPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
+
+      const repository = new Repository({ datasource: [
+          defaultDatasource,
+          lowPriorityDatasource,
+          hightPriorityDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mget').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mget').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'mget').andCallThrough();
+
+      return repository.mget(['id1', 'id2'])
+        .then(() => {
+          expect(lowPrioritySpy).toNotHaveBeenCalled();
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith(['id1', 'id2']);
+        });
+    });
+
+    it('should try to read other datasources if requested one fails', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });
+      lowPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityBrokenDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityBrokenDatasource, 'mget').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mget').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'mget').andCallThrough();
+
+      return repository.mget(['id1', 'id2'])
+        .then((data) => {
+          expect(defaultSpy).toNotHaveBeenCalled();
+          expect(hightPrioritySpy).toHaveBeenCalledWith(['id1', 'id2']);
+          expect(lowPrioritySpy).toHaveBeenCalledWith(['id1', 'id2']);
+          expect(data).toEqual({ id1: 'value1', id2: 'value2' });
+        });
+    });
+
+    it('should try to read other datasources if requested contains not fluent data', () => {
+      const defaultDatasource = new InMemoryDatasource();
+      defaultDatasource.mset({ id1: 'wrong-value1', id3: 'value3' });
+      const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
+      lowPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
+      const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });        
+
+      const repository = new Repository({ datasource: [
+        defaultDatasource,
+        lowPriorityDatasource,
+        hightPriorityBrokenDatasource
+      ] });
+
+      const hightPrioritySpy = expect.spyOn(hightPriorityBrokenDatasource, 'mget').andCallThrough();
+      const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mget').andCallThrough();
+      const defaultSpy = expect.spyOn(defaultDatasource, 'mget').andCallThrough();
+
+      return repository.mget(['id1', 'id2', 'id3', 'id4'])
+        .then((data) => {
+          expect(hightPrioritySpy).toHaveBeenCalledWith(['id1', 'id2', 'id3', 'id4']);
+          expect(lowPrioritySpy).toHaveBeenCalledWith(['id1', 'id2', 'id3', 'id4']);
+          expect(defaultSpy).toHaveBeenCalledWith(['id3', 'id4']);
+          expect(data).toEqual({
+            id1: 'value1',
+            id2: 'value2',
+            id3: 'value3',
+            id4: null,
+          });
+        })
+    });
+
+    it('should resolve with Entity exemplar if EntityFactory was specified in constructot', () => {
+      const datasource = new InMemoryDatasource();
+      datasource.set('id1', 'value1');
+      datasource.set('id2', 'value2');
+
+      const repository = new Repository({
+        datasource: [ datasource ],
+        entityFactory: real => real + '_modifier',
+      });
+
+      return repository.mget(['id1', 'id2'])
+        .then(data => expect(data).toEqual({
+          id1: 'value1_modifier',
+          id2: 'value2_modifier',
+        }));
     });
 
     it('should delegate to multiple #get() methods if #mget is not implemented', () => {
