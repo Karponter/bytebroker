@@ -75,6 +75,24 @@ class InMemoryDatasource extends Datasource{
         }
         return Promise.resolve(Object.assign({}, ...resultArray));
     }
+
+    getall() {
+        return Promise.resolve(Array.from(this.storageMap.keys()));
+    }
+
+    find(regexp, flags) {
+        if (!(regexp instanceof RegExp)) {
+            regexp = new RegExp(regexp, flags);
+        }
+
+        return this.getall()
+            .then((allKeys) => {
+                return allKeys.filter((key) => regexp.test(key));
+            })
+            .then((filteredKeys) => {
+                return this.mget(filteredKeys);
+            });
+    }
 }
 module.exports = InMemoryDatasource;
 
