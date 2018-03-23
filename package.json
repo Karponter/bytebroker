@@ -10,7 +10,10 @@
     "type": "git",
     "url": "git+https://github.com/Karponter/bytebroker.git"
   },
-  "authors": ["Fraideron", "Karponter"],
+  "authors": [
+    "Fraideron",
+    "Karponter"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Karponter/bytebroker/issues"

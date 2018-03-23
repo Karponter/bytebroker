@@ -182,7 +182,7 @@ describe('Repository', () => {
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
       const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
-      
+
       return repository.set('id2', 'value2')
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
@@ -212,7 +212,7 @@ describe('Repository', () => {
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
       const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
-      
+
       return repository.set('id2', 'value2')
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
@@ -239,7 +239,7 @@ describe('Repository', () => {
 
       const spy1 = expect.spyOn(writeAlwaysDatasource1, 'set').andCallThrough();
       const spy2 = expect.spyOn(writeAlwaysDatasource2, 'set').andCallThrough();
-      
+
       return repository.set('id2', 'value2')
         .then(() => {
           expect(spy1).toHaveBeenCalledWith('id2', 'value2');
@@ -267,7 +267,7 @@ describe('Repository', () => {
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'set').andCallThrough();
       const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'set').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'set').andCallThrough();
-      
+
       return repository.set('id2', 'value2')
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
@@ -479,7 +479,7 @@ describe('Repository', () => {
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mset').andCallThrough();
       const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mset').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
-      
+
       return repository.mset(msetFixture)
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
@@ -509,7 +509,7 @@ describe('Repository', () => {
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mset').andCallThrough();
       const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mset').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
-      
+
       return repository.mset(msetFixture)
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
@@ -518,7 +518,7 @@ describe('Repository', () => {
           expect(data).toInclude(...Object.keys(msetFixture));
         });
     });
-    
+
     it('should delegate to every WriteAlways datasource', () => {
       const defaultDatasource = new InMemoryDatasource();
       const writeAlwaysDatasource1 = new InMemoryDatasource(null, {
@@ -536,7 +536,7 @@ describe('Repository', () => {
 
       const spy1 = expect.spyOn(writeAlwaysDatasource1, 'mset').andCallThrough();
       const spy2 = expect.spyOn(writeAlwaysDatasource2, 'mset').andCallThrough();
-      
+
       return repository.mset(msetFixture)
         .then(() => {
           expect(spy1).toHaveBeenCalledWith(msetFixture);
@@ -564,7 +564,7 @@ describe('Repository', () => {
       const hightPrioritySpy = expect.spyOn(hightPriorityDatasource, 'mset').andCallThrough();
       const lowPrioritySpy = expect.spyOn(lowPriorityDatasource, 'mset').andCallThrough();
       const defaultSpy = expect.spyOn(defaultDatasource, 'mset').andCallThrough();
-      
+
       return repository.mset(msetFixture)
         .then((data) => {
           expect(defaultSpy).toNotHaveBeenCalled();
@@ -683,7 +683,7 @@ describe('Repository', () => {
       defaultDatasource.mset({ id1: 'wrong-value1', id3: 'value3' });
       const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
       lowPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
-      const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });        
+      const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });
 
       const repository = new Repository({ datasource: [
         defaultDatasource,
@@ -743,7 +743,7 @@ describe('Repository', () => {
     });
   });
 
-  describe.skip('#mdelete', () => {
+  describe('#mdelete', () => {
     it('should delegate to Datasource::mdelete() method', () => {
       const testDatasource = new InMemoryDatasource();
       const repository = new Repository({ datasource: [testDatasource] });
@@ -751,6 +751,14 @@ describe('Repository', () => {
 
       return repository.mdelete(['id2', 'id3'])
         .then(() => expect(spy).toHaveBeenCalledWith(['id2', 'id3']));
+    });
+
+    it.skip('should delegate to every Datasource except NO_WRITE writeMode', () => {
+
+    });
+
+    it.skip('should collect truthly reports from all accessed Datasources', () => {
+
     });
 
     it('should delegate to multiple #delete() methods if #mdelete is not implemented', () => {
@@ -831,12 +839,12 @@ describe('Repository', () => {
 
       });
       describe('#set', () => {
-        
+
         it('should not trigger datasource update', () => {});
 
       });
       describe('#delete', () => {
-        
+
         it('should not trigger datasource update', () => {});
 
       });
@@ -846,7 +854,7 @@ describe('Repository', () => {
 
       });
     });
-    
+
     describe('SYNC_ON_UPDATE', () => {
 
       describe('#sync', () => {

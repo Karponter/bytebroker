@@ -24,13 +24,13 @@ class Repository {
    * @param  {Number}   options.syncStrategy
    *         -- constant that defines stratagy of communication with datasources
    * @param  {Number}   options.errorProcessingStrategy
-   *         -- constant that defines 
+   *         -- constant that defines
    */
   constructor(options) {
     options = options || {};
 
     this.syncCache = new InMemoryDatasource();
-    
+
     // datasource option processing
     if (options.datasource) {
       options.datasource.forEach(ds =>
@@ -55,6 +55,9 @@ class Repository {
     this.writeAlwaysDatasourceGroup = this.datasourceStack
       .filter(ds => ds.writeMode === Datasource.WRITE_MODE.WRITE_ALWAYS);
 
+    this.writeAllowedDatasourceGroup = this.datasourceStack
+      .filter(ds => ds.writeMode !== Datasource.WRITE_MODE.NO_WRITE);
+
     // entityFactory option processing
     this.entityFactory = null;
     if (options.entityFactory instanceof Function) {
@@ -70,9 +73,9 @@ class Repository {
    * Performs lookup over registered Datasources with respect ro readPriority of those.
    * Attempts to read data from a Datasource with a maximum readPriority.
    * Value is mapped with emtityFactory if the one is specified in constructor.
-   * 
+   *
    * @param  {any} id   -- identifier of entity to get
-   * @return {Promise}  -- resolves with a requested entity or null  
+   * @return {Promise}  -- resolves with a requested entity or null
    */
   get(id) {
     const defer = this.datasourceStack.reduce((acc, datasource) => acc
@@ -80,7 +83,7 @@ class Repository {
       .catch((error) => attempt(null, () => datasource.get(id))),
     Promise.resolve(null));
 
-    return this.entityFactory ? 
+    return this.entityFactory ?
       defer.then(data => this.entityFactory(data)) : defer;
   }
 
@@ -90,7 +93,7 @@ class Repository {
    * Saves data to a single WRITE_FIRST Datasource with a maximum writePriority property
    * Skips NO_WRITE datasource
    * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
-   * 
+   *
    * @param {any} id    -- identifier of entity to save
    * @param {any} value -- value to be saved
    * @return {Promise}  -- resolves with an identifier of saved entity or null if entity wasn't saved
@@ -114,7 +117,7 @@ class Repository {
    * Delete entity from a Repository.
    * Removes data from each datasource except those that marked as NO_WRITE.
    * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
-   * 
+   *
    * @param  {any} id     -- identifier of entity to remove
    * @return {Promise}    -- resolves with true if removal operation was performed and false if it wasn't
    */
@@ -130,7 +133,7 @@ class Repository {
    * Performs lookup over registered Datasources with respect ro readPriority of those.
    * Attempts to read data from a Datasource with a maximum readPriority.
    * Value is mapped with emtityFactory if the one is specified in constructor.
-   * 
+   *
    * @param  {Array<any>} ids   -- list of entity identifiers
    * @return {Promise}          -- resolves with key-value mapping of ids to entities
    */
@@ -180,7 +183,7 @@ class Repository {
    * Save multiple entities within a Repository.
    * Mitigates #set logic fluently
    * Use #set method directly if datasource have no mset implemented
-   * 
+   *
    * @param  {Object<id => value>} payload  -- represents values that should be saved under id
    * @return {Promise}                      -- resolves with list of seted ids
    */
@@ -206,8 +209,27 @@ class Repository {
     return Promise.resolve();
   }
 
-  mdelete() {
-    return Promise.resolve();
+  /**
+   * [mdelete description]
+   * @param  {[type]} ids [description]
+   * @return {[type]}     [description]
+   */
+  mdelete(ids) {
+    const fluentDefer = Promise.all(this.writeAllowedDatasourceGroup.map((ds) => {
+      return (ds.mdelete !== undefined) ? ds.mdelete(ids) :
+        Promise.all(ids.map(id => ds.delete(id)))
+          .then((results) => results.reduce((acc, result, index) => {
+            acc[ids[index]] = result;
+            return acc;
+          }, {}));
+    }));
+
+    return fluentDefer.then((reports) => {
+      return reports.reduce((acc, report) => {
+        Object.keys(report).forEach((key) => acc[key] = acc[key] || report[key]);
+        return Object.assign({}, report, acc);
+      }, {});
+    });
   }
 
   getall() {
