@@ -210,9 +210,12 @@ class Repository {
   }
 
   /**
-   * [mdelete description]
-   * @param  {[type]} ids [description]
-   * @return {[type]}     [description]
+   * Delete multiple entities from repository
+   * Removes data from each datasource except those that marked as NO_WRITE.
+   * Saves data to cache instead of triggering Datasuurce directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
+   * 
+   * @param  {Array<any>} ids   -- list of entity identifiers
+   * @return {Promise}          -- resolves with key-value mapping with id's and true, if value was removed
    */
   mdelete(ids) {
     const fluentDefer = Promise.all(this.writeAllowedDatasourceGroup.map((ds) => {
@@ -232,8 +235,21 @@ class Repository {
     });
   }
 
+  /**
+   * List all keys that available all over the Datasources
+   * 
+   * @return {Promise}    -- resolves with list of available keys
+   */
   getall() {
-    return Promise.resolve();
+    return Promise.all(this.datasourceStack.map((ds) => ds.getall()))
+      .then((reportsLits) => {
+        const unicKeysSet = new Set();
+        reportsLits.forEach((report) => {
+          report.forEach(key => unicKeysSet.add(key));
+        });
+
+        return Array.from(unicKeysSet);
+      });
   }
 
   find() {

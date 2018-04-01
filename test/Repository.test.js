@@ -357,7 +357,7 @@ describe('Repository', () => {
     });
   });
 
-  describe.skip('#getall', () => {
+  describe('#getall', () => {
     it('should delegate to Datasource::getall() method', () => {
       const testDatasource = new InMemoryDatasource();
       const repository = new Repository({ datasource: [testDatasource] });
@@ -383,15 +383,11 @@ describe('Repository', () => {
       const repository = new Repository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
-        hightPriorityBrokenDatasource
+        hightPriorityDatasource
       ] });
 
-      repository.getall()
-        .then(data => expect(data).toEqual({
-          hight: true,
-          low: true,
-          default: true,
-        }));
+      return repository.getall()
+        .then(data => expect(data).toEqual([ 'hight', 'low', 'default' ]));
     });
   });
 
