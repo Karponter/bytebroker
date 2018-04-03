@@ -58,8 +58,7 @@ const repository = bytebroket.createRepository({
 
 Get an entity from a Repository.
 
-> @param  {any} id   -- identifier of entity to get
-
+> @param  {any} id   -- identifier of entity to get <br>
 > @return {Promise}  -- resolves with a requested entity or null
 
 Performs lookup over registered Datasources with respect ro readPriority of those.
