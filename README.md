@@ -54,29 +54,102 @@ const repository = bytebroket.createRepository({
 
 ### Repository
 
-#### get()
+#### get(id)
 
 Get an entity from a Repository.
 
-> @param  {any} id   -- identifier of entity to get <br>
+> @param  {any} id   -- identifier of entity to get
+>
 > @return {Promise}  -- resolves with a requested entity or null
 
 Performs lookup over registered Datasources with respect ro readPriority of those.
+
 Attempts to read data from a Datasource with a maximum readPriority.
+
 Value is mapped with emtityFactory if the one is specified in constructor.
 
-#### set()
+#### set(id, value)
 
-#### delete()
+Save entity within a Repository.
+
+> @param {any} id    -- identifier of entity to save <br>
+> @param {any} value -- value to be saved
+> 
+> @return {Promise}  -- resolves with an identifier of saved entity or null if entity wasn't saved
+
+Saves data to every WRITE_ALWAYS Datasource
+
+Saves data to a single WRITE_FIRST Datasource with a maximum 
+writePriority property
+
+Skips NO_WRITE datasource
+
+Saves data to cache instead of triggering Datasource directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
+
+#### delete(id)
+
+Delete entity from a Repository.
+
+> @param  {any} id     -- identifier of entity to remove
+>
+> @return {Promise}    -- resolves with true if removal operation was performed and false if it wasn't
+
+Removes data from each datasource except those that marked as NO_WRITE.
+
+Saves data to cache instead of triggering Datasource directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
 
 #### getall()
 
-#### find()
+List all keys that available all over the Datasources
 
-#### mget()
+> @return {Promise}    -- resolves with list of available keys
 
-#### mset()
+#### find(selector)
 
-#### mdelete()
+Search througth available keys using regular expression
+
+> @param  {RegExp}   selector  -- regular xepression to test keys
+>
+> @return {Promise}            -- resolves with list of matching keys
+
+#### mget(ids)
+
+Get multiple entities from a Repository.
+
+> @param  {Array<any>} ids   -- list of entity identifiers
+>
+> @return {Promise}          -- resolves with key-value mapping of ids to entities
+
+Performs lookup over registered Datasources with respect ro readPriority of those.
+
+Attempts to read data from a Datasource with a maximum readPriority.
+
+Value is mapped with emtityFactory if the one is specified in constructor.
+
+#### mset(payload)
+
+Save multiple entities within a Repository.
+
+> @param  {Object<id => value>} payload  -- represents values that should be saved under id
+>
+> @return {Promise}                      -- resolves with list of seted ids
+
+Mitigates #set logic fluently
+
+Use #set method directly if datasource have no #mset implemented
+
+#### mdelete(ids)
+
+Delete multiple entities from a Repository.
+
+> @param  {Array<any>} ids   -- list of entity identifiers
+>
+> @return {Promise}          -- resolves with key-value mapping with id's and true, if value was removed
+
+Removes data from each datasource except those that marked as NO_WRITE.
+
+Saves data to cache instead of triggering Datasource directly when SYNC_ON_REQUEST or SYNC_ON_TIMEOUT sync strategy chosen.
 
 #### sync()
+
+TBD
