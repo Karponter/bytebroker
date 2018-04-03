@@ -1,6 +1,6 @@
 'use strict';
 
-const ireq = require('../src/ireq');
+const ireq = require('../ireq');
 const expect = require('expect');
 
 const Repository = ireq.lib('./Repository');

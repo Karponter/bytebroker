@@ -2,7 +2,7 @@
 
 const testDatasourceIntegrity = require('./datasource-integrity-tester');
 
-const ireq = require('../src/ireq');
+const ireq = require('../ireq');
 const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
 
 const vendorProvidedDaasources = [
