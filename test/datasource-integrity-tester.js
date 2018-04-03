@@ -79,8 +79,54 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
     });
 
     describe('#find', () => {
+      const datasource = createDatasource();
+
+      before(() => {
+          return datasource.mset({
+              city: 'Kyiv',
+              state: 'Ukraine',
+              region: 'Poltava'
+          });
+      });
+
       it('should return Promise ', () => {
         expect(datasource.find('')).toBeA(Promise);
+      });
+
+      it('should resolve with list of matching keys for RegExp', () => {
+          return datasource.find(new RegExp('.*')).then((foundValues) => {
+              expect(foundValues).toBeAn(Array);
+              expect(foundValues).toInclude('city');
+              expect(foundValues).toInclude('state');
+              expect(foundValues).toInclude('region');
+          });
+      });
+
+      it('should resolve with key-value object for RegExp', () => {
+          return datasource.find(new RegExp('y')).then((foundValues) => {
+              expect(foundValues).toBeAn(Array);
+              expect(foundValues).toInclude('city');
+              expect(foundValues).toExclude('state');
+              expect(foundValues).toExclude('region');
+          });
+      });
+
+      it('should resolve with key-value object for string as a params and without flags', () => {
+          return datasource.find('e').then((foundValues) => {
+              expect(foundValues).toBeAn(Array);
+              expect(foundValues).toInclude('state');
+              expect(foundValues).toInclude('region');
+              expect(foundValues).toExclude('city');
+          });
+      });
+
+      it('should resolve with key-value object for string as a params and with flags', () => {
+          return datasource.find('STATE', 'i').then((foundValues) => {
+              expect(foundValues).toBeAn(Array);
+              expect(foundValues).toInclude('state');
+              expect(foundValues).toExclude('region');
+              expect(foundValues).toExclude('city');
+          });
       });
     });
 

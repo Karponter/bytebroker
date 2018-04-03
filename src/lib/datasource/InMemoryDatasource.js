@@ -55,10 +55,13 @@ class InMemoryDatasource extends Datasource{
      * @param {*} incomingObject 
      */
     mset(incomingObject) {
+        if (!incomingObject) return Promise.resolve([]);
+
         const incomingObjectKeys = Object.keys(incomingObject);
         incomingObjectKeys.forEach((key) => {
             this.storageMap.set(key, incomingObject[key]);
-        })
+        });
+
         return Promise.resolve(incomingObjectKeys);
     }
 
@@ -67,12 +70,14 @@ class InMemoryDatasource extends Datasource{
      * @param {*} keysArray 
      */
     mdelete(keysArray) {
+        if (!keysArray) return Promise.resolve({});
         let resultArray;
         try{
             resultArray = keysArray.map((key) => ({[key]: this.storageMap.delete(key)}));        
         } catch(e) {
             return Promise.reject(new Error(e));
         }
+
         return Promise.resolve(Object.assign({}, ...resultArray));
     }
 
@@ -88,9 +93,6 @@ class InMemoryDatasource extends Datasource{
         return this.getall()
             .then((allKeys) => {
                 return allKeys.filter((key) => regexp.test(key));
-            })
-            .then((filteredKeys) => {
-                return this.mget(filteredKeys);
             });
     }
 }

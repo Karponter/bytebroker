@@ -252,8 +252,30 @@ class Repository {
       });
   }
 
-  find() {
-    return Promise.resolve();
+  /**
+   * Search througth available keys using regular expression
+   * Resulting with key => value pairs of enities with all keys matching passed RegExp
+   *
+   * @param  {RegExp}   selector  -- regular xepression to test keys
+   * @return {Promise}            -- resolves with list of matching keys
+   */
+  find(selector) {
+    const atomicFindCation = (ds, selector) => {
+      if (ds.find === undefined) {
+        return Promise.resolve([]);
+      }
+      return ds.find(selector);
+    };
+
+    return Promise.all(this.datasourceStack.map((ds) => atomicFindCation(ds, selector)))
+      .then((reportsLits) => {
+        const unicKeysSet = new Set();
+        reportsLits.forEach((report) => {
+          report.forEach(key => unicKeysSet.add(key));
+        });
+
+        return Array.from(unicKeysSet);
+      });
   }
 
   sync() {
