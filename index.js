@@ -3,8 +3,9 @@
 const ireq = require('./ireq');
 const Repository = ireq.lib('./Repository');
 const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
+const DATASOURCE_IMPLEMENTATIONS = ireq.lib.datasource('');
 
-const repositoryFactoryMethod = (options) => {
+const repositoryFactoryMethod = (options = {}) => {
   switch (options.syncStrategy) {
 
     // case SYNC_STRATEGY.NO_SYNC:
@@ -28,4 +29,5 @@ const repositoryFactoryMethod = (options) => {
 
 module.exports = {
   createRepository: repositoryFactoryMethod,
+  datasource: DATASOURCE_IMPLEMENTATIONS,
 };
