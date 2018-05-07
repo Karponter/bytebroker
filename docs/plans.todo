@@ -1,0 +1,9 @@
+ Sync strategies:
+   ☐ NoSyncRepository
+     Do not perform any write operations over Datasources
+     ☐ Crop existing Repository class
+   ☐ SyncOnUpdateRepository
+     ☐ Repository => SyncOnUpdateRepository
+   ☐ SyncOnRequestRepository
+   ☐ SyncOnTimeoutRepository
+   ☐ SyncOnBufferFullRepository
