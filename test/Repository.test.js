@@ -24,7 +24,6 @@ describe('Repository', () => {
         'syncStrategy',
         'entityFactory',
         'errorPeocessingStrategy',
-        'syncCache',
       ]);
 
       expect(repository.datasourceStack).toBeAn('array');
@@ -32,7 +31,7 @@ describe('Repository', () => {
       expect(repository.errorPeocessingStrategy).toBeA('number');
     });
 
-    it('should construct with in-memory caching', () => {
+    it.skip('should construct with in-memory caching', () => {
       const repository = new Repository();
 
       expect(repository.syncCache).toBeA(InMemoryDatasource);
@@ -819,82 +818,6 @@ describe('Repository', () => {
           expect(Object.keys(context).length).toEqual(dskeys.length);
           dskeys.forEach(key => expect(context[key]).toEqual(true));
         });
-    });
-  });
-
-  describe.skip('SyncStrategy', () => {
-
-    describe('SYNC_ON_TIMEOUT', () => {
-
-      it('should trigger datasource update with specified interval', () => {});
-
-      describe('#sync', () => {
-
-        it('should trigger values update to datasource', () => {});
-
-      });
-      describe('#set', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-      describe('#delete', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-      describe('#mset', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-    });
-
-    describe('SYNC_ON_REQUEST', () => {
-
-      describe('#sync', () => {
-
-        it('should trigger values update to datasource', () => {});
-
-      });
-      describe('#set', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-      describe('#delete', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-      describe('#mset', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-    });
-
-    describe('SYNC_ON_UPDATE', () => {
-
-      describe('#sync', () => {
-
-        it('should not trigger datasource update', () => {});
-
-      });
-      describe('#set', () => {
-
-        it('should trigger values update to datasource', () => {});
-
-      });
-      describe('#delete', () => {
-
-        it('should trigger values update to datasource', () => {});
-
-      });
-      describe('#mset', () => {
-
-        it('should trigger values update to datasource', () => {});
-      });
     });
   });
 

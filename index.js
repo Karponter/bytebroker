@@ -2,14 +2,15 @@
 
 const ireq = require('./ireq');
 const Repository = ireq.lib('./Repository');
+const NoSyncReposytory = ireq.lib('./NoSyncReposytory');
 const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
-const DATASOURCE_IMPLEMENTATIONS = ireq.lib.datasource('');
+const datasourceImplementations = ireq.lib.datasource('');
 
 const repositoryFactoryMethod = (options = {}) => {
   switch (options.syncStrategy) {
 
-    // case SYNC_STRATEGY.NO_SYNC:
-    //   return new NoSyncReposytory(options);
+    case SYNC_STRATEGY.NO_SYNC:
+      return new NoSyncReposytory(options);
 
     // case SYNC_STRATEGY.SYNC_ON_REQUEST:
     //   return new SyncOnRequestReposytory(options);
@@ -29,5 +30,6 @@ const repositoryFactoryMethod = (options = {}) => {
 
 module.exports = {
   createRepository: repositoryFactoryMethod,
-  datasource: DATASOURCE_IMPLEMENTATIONS,
+  datasource: datasourceImplementations,
+  syncStrategy: SYNC_STRATEGY,
 };

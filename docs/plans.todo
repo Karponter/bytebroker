@@ -1,9 +1,11 @@
  Sync strategies:
    ☐ NoSyncRepository
      Do not perform any write operations over Datasources
-     ☐ Crop existing Repository class
+     ✔ Crop existing Repository class and rename @done (18-05-07 23:30)
+     ☐ Extend NoSyncRepository with Repository class
    ☐ SyncOnUpdateRepository
      ☐ Repository => SyncOnUpdateRepository
+     ☐ Refactor SyncStrategy access in tests
    ☐ SyncOnRequestRepository
    ☐ SyncOnTimeoutRepository
    ☐ SyncOnBufferFullRepository
