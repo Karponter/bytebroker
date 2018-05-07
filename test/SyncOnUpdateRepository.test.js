@@ -1,26 +1,30 @@
 'use strict';
 
+/**
+ * Coveres both SyncOnUpdateRepository and NoSyncRepository
+ */
+
 const ireq = require('../ireq');
 const expect = require('expect');
 
 const SyncOnUpdateRepository = ireq.lib('./SyncOnUpdateRepository');
 const Datasource = ireq.lib('./Datasource');
 const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
+const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
 const {
-  SYNC_STRATEGY,
   ERROR_PROCESSING_STRATEGY,
 } = SyncOnUpdateRepository;
 
-const createRepository = (options) => new SyncOnUpdateRepository(oprions);
+const createRepository = (options) => new SyncOnUpdateRepository(options);
 
 describe('SyncOnUpdateRepository', () => {
   describe('#constructor', () => {
     it('should correctly construct with no parameters', () => {
       const repository = createRepository();
 
-      expect(repository).toBeA(Repository);
+      expect(repository).toBeA(SyncOnUpdateRepository);
       expect(repository).toIncludeKeys([
         'datasourceStack',
         'syncStrategy',
