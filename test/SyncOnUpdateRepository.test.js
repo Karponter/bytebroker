@@ -3,7 +3,7 @@
 const ireq = require('../ireq');
 const expect = require('expect');
 
-const Repository = ireq.lib('./Repository');
+const SyncOnUpdateRepository = ireq.lib('./SyncOnUpdateRepository');
 const Datasource = ireq.lib('./Datasource');
 const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
@@ -11,12 +11,14 @@ const BrokenDatasource = require('./helpers/BrokenDatasource');
 const {
   SYNC_STRATEGY,
   ERROR_PROCESSING_STRATEGY,
-} = Repository;
+} = SyncOnUpdateRepository;
 
-describe('Repository', () => {
+const createRepository = (options) => new SyncOnUpdateRepository(oprions);
+
+describe('SyncOnUpdateRepository', () => {
   describe('#constructor', () => {
     it('should correctly construct with no parameters', () => {
-      const repository = new Repository();
+      const repository = createRepository();
 
       expect(repository).toBeA(Repository);
       expect(repository).toIncludeKeys([
@@ -32,13 +34,13 @@ describe('Repository', () => {
     });
 
     it.skip('should construct with in-memory caching', () => {
-      const repository = new Repository();
+      const repository = createRepository();
 
       expect(repository.syncCache).toBeA(InMemoryDatasource);
     });
 
     it('should accept custom Datasource stack as provision', () => {
-      const repository = new Repository({
+      const repository = createRepository({
         datasource: [ new InMemoryDatasource() ],
       });
 
@@ -47,7 +49,7 @@ describe('Repository', () => {
     });
 
     it('should accept custom SyncStrategy as provision', () => {
-      const repository = new Repository({
+      const repository = createRepository({
         syncStrategy: SYNC_STRATEGY.SYNC_ON_REQUEST,
       });
 
@@ -55,7 +57,7 @@ describe('Repository', () => {
     });
 
     it('should accept custom EntityFactory as provision', () => {
-      const repository = new Repository({
+      const repository = createRepository({
         entityFactory: () => 'testingResult',
       });
 
@@ -69,7 +71,7 @@ describe('Repository', () => {
 
   describe('methods should be thenable', () => {
     const thenableMethods = ['get', 'set', 'delete', 'mget', 'mset', 'mdelete', 'getall', 'find'];
-    const repository = new Repository();
+    const repository = createRepository();
 
     thenableMethods.forEach((method) => {
       it(`#${method} should return Promise`, () => {
@@ -89,7 +91,7 @@ describe('Repository', () => {
     });
 
     it('should delegate to Datasource::get() method', () => {
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'get').andCallThrough();
 
       return repository.get('id')
@@ -100,7 +102,7 @@ describe('Repository', () => {
       const defaultDatasource = new InMemoryDatasource();
       const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
       const hightPriorityDatasource = new InMemoryDatasource(null, { readPriority: 3 });
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
           defaultDatasource,
           lowPriorityDatasource,
           hightPriorityDatasource
@@ -122,7 +124,7 @@ describe('Repository', () => {
       const defaultDatasource = new InMemoryDatasource();
       const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
       const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityBrokenDatasource
@@ -142,7 +144,7 @@ describe('Repository', () => {
     });
 
     it('should resolve with Entity exemplar if EntityFactory was specified in constructot', () => {
-      const repository = new Repository({
+      const repository = createRepository({
         datasource: [ testDatasource ],
         entityFactory: real => real + '_modifier',
       });
@@ -156,7 +158,7 @@ describe('Repository', () => {
     const testDatasource = new InMemoryDatasource();
 
     it('should delegate to Datasource::set() method', () => {
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'set').andCallThrough();
 
       return repository.set('id2', 'value2')
@@ -174,7 +176,7 @@ describe('Repository', () => {
         writePriority: 3,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -204,7 +206,7 @@ describe('Repository', () => {
         writePriority: 3,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -232,7 +234,7 @@ describe('Repository', () => {
         writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         writeAlwaysDatasource1,
         writeAlwaysDatasource2
@@ -259,7 +261,7 @@ describe('Repository', () => {
         writePriority: 3,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -288,7 +290,7 @@ describe('Repository', () => {
         writePriority: 100500,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         noWriteDatasource1,
         noWriteDatasource2,
         defaultDatasource
@@ -310,7 +312,7 @@ describe('Repository', () => {
   describe('#delete', () => {
     it('should delegate to Datasource::delete() method', () => {
       const testDatasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'delete').andCallThrough();
 
       return repository.delete('id')
@@ -334,7 +336,7 @@ describe('Repository', () => {
         writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource,
@@ -361,7 +363,7 @@ describe('Repository', () => {
   describe('#getall', () => {
     it('should delegate to Datasource::getall() method', () => {
       const testDatasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'getall').andCallThrough();
 
       return repository.getall()
@@ -381,7 +383,7 @@ describe('Repository', () => {
 
       hightPriorityDatasource.set('hight', true);
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -395,7 +397,7 @@ describe('Repository', () => {
   describe('#find', () => {
     it('should delegate to Datasource::find() method', () => {
       const testDatasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'find').andCallThrough();
 
       return repository.find(/.*/)
@@ -406,7 +408,7 @@ describe('Repository', () => {
       const testDatasource = new InMemoryDatasource();
       testDatasource.find = undefined;
 
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
 
       return repository.find(/.*/)
         .then((keysList) => {
@@ -424,7 +426,7 @@ describe('Repository', () => {
 
     it('should delegate to Datasource::mset() method', () => {
       const testDatasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'mset').andCallThrough();
 
       return repository.mset({ id2: 2, id3: 3 })
@@ -442,7 +444,7 @@ describe('Repository', () => {
         writePriority: 3,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -472,7 +474,7 @@ describe('Repository', () => {
         writePriority: 3,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -500,7 +502,7 @@ describe('Repository', () => {
         writeMode: Datasource.WRITE_MODE.WRITE_ALWAYS,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         writeAlwaysDatasource1,
         writeAlwaysDatasource2
@@ -527,7 +529,7 @@ describe('Repository', () => {
         writePriority: 3,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityDatasource
@@ -556,7 +558,7 @@ describe('Repository', () => {
         writePriority: 100500,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         noWriteDatasource1,
         noWriteDatasource2,
         defaultDatasource
@@ -578,7 +580,7 @@ describe('Repository', () => {
       const testDatasource = new InMemoryDatasource();
       testDatasource.mset = undefined;
 
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'set').andCallThrough();
 
       return repository.mset({ id1: 1, id2: 2, id3: 3 })
@@ -595,7 +597,7 @@ describe('Repository', () => {
   describe('#mget', () => {
     it('should delegate to Datasource::mget() method', () => {
       const testDatasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'mget').andCallThrough();
 
       return repository.mget(['id2', 'id3'])
@@ -608,7 +610,7 @@ describe('Repository', () => {
       const hightPriorityDatasource = new InMemoryDatasource(null, { readPriority: 3 });
       hightPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
           defaultDatasource,
           lowPriorityDatasource,
           hightPriorityDatasource
@@ -631,7 +633,7 @@ describe('Repository', () => {
       const lowPriorityDatasource = new InMemoryDatasource(null, { readPriority: 1 });
       const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });
       lowPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityBrokenDatasource
@@ -657,7 +659,7 @@ describe('Repository', () => {
       lowPriorityDatasource.mset({ id1: 'value1', id2: 'value2' });
       const hightPriorityBrokenDatasource = new BrokenDatasource(null, { readPriority: 3 });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         defaultDatasource,
         lowPriorityDatasource,
         hightPriorityBrokenDatasource
@@ -686,7 +688,7 @@ describe('Repository', () => {
       datasource.set('id1', 'value1');
       datasource.set('id2', 'value2');
 
-      const repository = new Repository({
+      const repository = createRepository({
         datasource: [ datasource ],
         entityFactory: real => real + '_modifier',
       });
@@ -702,7 +704,7 @@ describe('Repository', () => {
       const testDatasource = new InMemoryDatasource();
       testDatasource.mget = undefined;
 
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'get').andCallThrough();
 
       return repository.mget(['id1', 'id2', 'id3'])
@@ -718,7 +720,7 @@ describe('Repository', () => {
   describe('#mdelete', () => {
     it('should delegate to Datasource::mdelete() method', () => {
       const testDatasource = new InMemoryDatasource();
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'mdelete').andCallThrough();
 
       return repository.mdelete(['id2', 'id3'])
@@ -735,7 +737,7 @@ describe('Repository', () => {
         writePriority: 100500,
       });
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         noWriteDatasource1,
         noWriteDatasource2,
         defaultDatasource
@@ -764,7 +766,7 @@ describe('Repository', () => {
       const fooSpy = expect.spyOn(fooDatasource, 'mdelete').andCallThrough();
       const barSpy = expect.spyOn(barDatasource, 'mdelete').andCallThrough();
 
-      const repository = new Repository({ datasource: [
+      const repository = createRepository({ datasource: [
         emptyDatasource,
         fooDatasource,
         barDatasource,
@@ -783,7 +785,7 @@ describe('Repository', () => {
       const testDatasource = new InMemoryDatasource();
       testDatasource.mdelete = undefined;
 
-      const repository = new Repository({ datasource: [testDatasource] });
+      const repository = createRepository({ datasource: [testDatasource] });
       const spy = expect.spyOn(testDatasource, 'delete').andCallThrough();
 
       return repository.mdelete(['id1', 'id2', 'id3'])
@@ -810,7 +812,7 @@ describe('Repository', () => {
         });
       });
 
-      const repository = new Repository({ datasource: datasources });
+      const repository = createRepository({ datasource: datasources });
 
       repository.sync()
         .then((report) => {

@@ -1,10 +1,10 @@
  Sync strategies:
-   ☐ NoSyncRepository
+   ✔ NoSyncRepository @done (18-05-08 00:17)
      Do not perform any write operations over Datasources
      ✔ Crop existing Repository class and rename @done (18-05-07 23:30)
-     ☐ Extend NoSyncRepository with Repository class
+     ✔ Extend NoSyncRepository with Repository class @done (18-05-08 00:12)
    ☐ SyncOnUpdateRepository
-     ☐ Repository => SyncOnUpdateRepository
+     ✔ Repository => SyncOnUpdateRepository @done (18-05-08 00:28)
      ☐ Refactor SyncStrategy access in tests
    ☐ SyncOnRequestRepository
    ☐ SyncOnTimeoutRepository

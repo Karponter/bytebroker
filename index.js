@@ -1,9 +1,8 @@
 'use strict';
 
 const ireq = require('./ireq');
-const Repository = ireq.lib('./Repository');
-const NoSyncReposytory = ireq.lib('./NoSyncReposytory');
 const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
+const { SyncOnUpdateRepository, NoSyncReposytory } = ireq.lib('');
 const datasourceImplementations = ireq.lib.datasource('');
 
 const repositoryFactoryMethod = (options = {}) => {
@@ -23,7 +22,7 @@ const repositoryFactoryMethod = (options = {}) => {
 
     case SYNC_STRATEGY.SYNC_ON_UPDATE:
     default:
-      return new Repository(options);
+      return new SyncOnUpdateRepository(options);
 
   };
 };
