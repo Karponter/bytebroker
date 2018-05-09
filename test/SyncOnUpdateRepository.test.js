@@ -13,10 +13,6 @@ const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
 const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
-const {
-  ERROR_PROCESSING_STRATEGY,
-} = SyncOnUpdateRepository;
-
 const createRepository = (options) => new SyncOnUpdateRepository(options);
 
 describe('SyncOnUpdateRepository', () => {
