@@ -7,5 +7,11 @@
      ✔ Repository => SyncOnUpdateRepository @done (18-05-08 00:28)
      ✔ Refactor SyncStrategy access in tests @done (18-05-08 01:37)
    ☐ SyncOnRequestRepository
+     ✔ Create unit tests @done (18-05-25 02:30)
+     ☐ Extend SyncOnUpdateRepository and implement additional functions
    ☐ SyncOnTimeoutRepository
+     ☐ Create unit tests
+     ☐ Extend SyncOnRequestRepository and implement timing trigger
    ☐ SyncOnBufferFullRepository
+     ☐ Create unit tests
+     ☐ Extend SyncOnRequestRepository and implement buffer-size trigger
