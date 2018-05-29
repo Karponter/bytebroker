@@ -82,11 +82,11 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
       const datasource = createDatasource();
 
       before(() => {
-          return datasource.mset({
-              city: 'Kyiv',
-              state: 'Ukraine',
-              region: 'Poltava'
-          });
+        return datasource.mset({
+          city: 'Kyiv',
+          state: 'Ukraine',
+          region: 'Poltava'
+        });
       });
 
       it('should return Promise ', () => {
@@ -94,39 +94,39 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
       });
 
       it('should resolve with list of matching keys for RegExp', () => {
-          return datasource.find(new RegExp('.*')).then((foundValues) => {
-              expect(foundValues).toBeAn(Array);
-              expect(foundValues).toInclude('city');
-              expect(foundValues).toInclude('state');
-              expect(foundValues).toInclude('region');
-          });
+        return datasource.find(new RegExp('.*')).then((foundValues) => {
+          expect(foundValues).toBeAn(Array);
+          expect(foundValues).toInclude('city');
+          expect(foundValues).toInclude('state');
+          expect(foundValues).toInclude('region');
+        });
       });
 
       it('should resolve with key-value object for RegExp', () => {
-          return datasource.find(new RegExp('y')).then((foundValues) => {
-              expect(foundValues).toBeAn(Array);
-              expect(foundValues).toInclude('city');
-              expect(foundValues).toExclude('state');
-              expect(foundValues).toExclude('region');
-          });
+        return datasource.find(new RegExp('y')).then((foundValues) => {
+          expect(foundValues).toBeAn(Array);
+          expect(foundValues).toInclude('city');
+          expect(foundValues).toExclude('state');
+          expect(foundValues).toExclude('region');
+        });
       });
 
       it('should resolve with key-value object for string as a params and without flags', () => {
-          return datasource.find('e').then((foundValues) => {
-              expect(foundValues).toBeAn(Array);
-              expect(foundValues).toInclude('state');
-              expect(foundValues).toInclude('region');
-              expect(foundValues).toExclude('city');
-          });
+        return datasource.find('e').then((foundValues) => {
+          expect(foundValues).toBeAn(Array);
+          expect(foundValues).toInclude('state');
+          expect(foundValues).toInclude('region');
+          expect(foundValues).toExclude('city');
+        });
       });
 
       it('should resolve with key-value object for string as a params and with flags', () => {
-          return datasource.find('STATE', 'i').then((foundValues) => {
-              expect(foundValues).toBeAn(Array);
-              expect(foundValues).toInclude('state');
-              expect(foundValues).toExclude('region');
-              expect(foundValues).toExclude('city');
-          });
+        return datasource.find('STATE', 'i').then((foundValues) => {
+          expect(foundValues).toBeAn(Array);
+          expect(foundValues).toInclude('state');
+          expect(foundValues).toExclude('region');
+          expect(foundValues).toExclude('city');
+        });
       });
     });
 
@@ -171,9 +171,7 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
 
       it('should resolve a list of IDs that were set', () => {
         return datasource.mset(fixtureObject)
-          .then((res) => {
-            expect(res).toEqual(Object.keys(fixtureObject));
-          })
+          .then((res) => expect(res).toEqual(Object.keys(fixtureObject)));
       });
 
       it.skip('should resolve null instead of ID if value was not set', () => {
@@ -198,30 +196,16 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
           })
       });
 
-      it('should resolve with reports of every delete operator', () => {
-        return datasource.mdelete(Object.keys(fixtureObject))
-          .then((res) => {
-            expect(Object.keys(fixtureObject)).toEqual(res);
-          })
-      });
-
-      it('should resolve with true if value was removed', () => {
-        return datasource.mset(fixtureObject)
+      it('should resolve with list of removed ids', () => {
+        return Promise.resolve()
+          .then(() => datasource.mset(fixtureObject))
           .then(() => datasource.mdelete(Object.keys(fixtureObject)))
-          .then((res) => {
-            Object.keys(fixtureObject).forEach((key,index) => { 
-              expect(res[key]).toEqual(true);
-            });
-          })
-      });
-
-      it('should resolve with false if value was not removed', () => {
-        return datasource.mdelete(Object.keys(fixtureObject))
-          .then((res) => {
-            Object.keys(fixtureObject).forEach(key => {
-              expect(res[key]).toEqual(false);
-            });
-          })
+          .then((report) => {
+            const expectable = Object.keys(fixtureObject);
+            expect(report).toBeAn(Array);
+            expect(report.length).toEqual(expectable.length);
+            expectable.forEach(value => expect(report).toInclude(value));
+          });
       });
     });
 
