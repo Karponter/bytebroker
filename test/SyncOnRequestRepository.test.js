@@ -5,14 +5,18 @@ const expect = require('expect');
 
 const SyncOnRequestRepository = ireq.lib('./SyncOnRequestRepository');
 const Datasource = ireq.lib('./Datasource');
-const {
-  InMemoryDatasource,
-  SyncCacheDatasource,
-} = ireq.lib.datasource('');
+const { InMemoryDatasource } = ireq.lib.datasource('');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
 const createRepository = options => new SyncOnRequestRepository(options);
-const expectToEqual = (expected) => (value) => expect(value).toEqual(expected); 
+const expectToEqual = (expected) => (value) => {
+  if (!Array.isArray(expected))
+    return expect(value).toEqual(expected);
+
+  expect(value).toBeAn(Array);
+  expect(expected.length).toEqual(value.length);
+  expected.forEach(unit => expect(value).toInclude(unit));
+};
 
 const wrapAsSetter = (value) => ({ action: 'set', value });
 const deleteAction = { action: 'delete' };
@@ -22,7 +26,7 @@ describe.only('SyncOnRequestRepository', () => {
     it('should initiate storing cache', () => {
       const repository = createRepository();
 
-      expect(repository._syncCache).toBeAn(SyncCacheDatasource);
+      expect(repository._syncCache).toBeAn(InMemoryDatasource);
     });
   });
 
@@ -32,10 +36,10 @@ describe.only('SyncOnRequestRepository', () => {
       const repository = createRepository({ datasource: [datasource] });
 
       return Promise.resolve()
-        .then(() => repository._syncCache.expose('test'))
+        .then(() => repository._syncCache.get('test'))
         .then(expectToEqual(null))
         .then(() => repository.set('test', 'value'))
-        .then(() => repository._syncCache.expose('test'))
+        .then(() => repository._syncCache.get('test'))
         .then(expectToEqual(wrapAsSetter('value')))
         .then(() => datasource.get('test'))
         .then(expectToEqual(null));
@@ -47,7 +51,7 @@ describe.only('SyncOnRequestRepository', () => {
       return Promise.resolve()
         .then(() => repository.set('test', 'value1'))
         .then(() => repository.set('test', 'value2'))
-        .then(() => repository._syncCache.expose('test'))
+        .then(() => repository._syncCache.get('test'))
         .then(expectToEqual(wrapAsSetter('value2')));
     });
   });
@@ -75,6 +79,17 @@ describe.only('SyncOnRequestRepository', () => {
         .then(() => repository.get('test'))
         .then(expectToEqual('value'));
     });
+
+    it('should not show data, marked for removal', () => {
+      const datasource = new InMemoryDatasource({ readPriority: Infinity });
+      const repository = createRepository({ datasource: [datasource] });
+      
+      return Promise.resolve()
+        .then(() => datasource.set('test', 'value'))
+        .then(() => repository.delete('test'))
+        .then(() => repository.get('test'))
+        .then(expectToEqual(null));
+    });
   });
 
   describe('#delete', () => {
@@ -85,7 +100,7 @@ describe.only('SyncOnRequestRepository', () => {
       return Promise.resolve()
         .then(() => datasource.set('test', 'value'))
         .then(() => repository.delete('test'))
-        .then(() => repository._syncCache.expose('test'))
+        .then(() => repository._syncCache.get('test'))
         .then(expectToEqual(deleteAction))
         .then(() => datasource.get('test'))
         .then(expectToEqual('value'));
@@ -96,10 +111,10 @@ describe.only('SyncOnRequestRepository', () => {
 
       return Promise.resolve()
         .then(() => repository.set('test', 'value'))
-        .then(() => repository._syncCache.expose('test'))
+        .then(() => repository._syncCache.get('test'))
         .then(expectToEqual(wrapAsSetter('value')))
         .then(() => repository.delete('test'))
-        .then(() => repository._syncCache.expose('test'))
+        .then(() => repository._syncCache.get('test'))
         .then(expectToEqual(deleteAction));
     });
   });
@@ -116,6 +131,18 @@ describe.only('SyncOnRequestRepository', () => {
         .then(() => repository.find('key'))
         .then(expectToEqual(['key2', 'key1']));
     });
+
+    it('should not show data, marked for removal', () => {
+      const datasource = new InMemoryDatasource({ readPriority: Infinity });
+      const repository = createRepository({ datasource: [datasource] });
+      
+      return Promise.resolve()
+        .then(() => datasource.set('key1', 'value1'))
+        .then(() => datasource.set('key2', 'value1'))
+        .then(() => repository.delete('key2'))
+        .then(() => repository.find('key'))
+        .then(expectToEqual(['key1']));
+    });
   });
 
   describe('#getall', () => {
@@ -130,6 +157,18 @@ describe.only('SyncOnRequestRepository', () => {
         .then(() => repository.getall())
         .then(expectToEqual(['key2', 'key1']));
     });
+
+    it('should not show data, marked for removal', () => {
+      const datasource = new InMemoryDatasource({ readPriority: Infinity });
+      const repository = createRepository({ datasource: [datasource] });
+      
+      return Promise.resolve()
+        .then(() => datasource.set('key1', 'value1'))
+        .then(() => datasource.set('key2', 'value1'))
+        .then(() => repository.delete('key2'))
+        .then(() => repository.getall())
+        .then(expectToEqual(['key1']));
+    });
   });
 
   describe('#mget', () => {
@@ -141,10 +180,24 @@ describe.only('SyncOnRequestRepository', () => {
         .then(() => datasource.set('key1', 'value1'))
         .then(() => datasource.set('key2', 'value1'))
         .then(() => repository.set('key2', 'value2'))
-        .then(() => repository._syncCache.expose('key2'))
+        .then(() => repository._syncCache.get('key2'))
         .then(expectToEqual(wrapAsSetter('value2')))
         .then(() => repository.mget(['key1', 'key2']))
         .then(expectToEqual({ key1: 'value1', key2: 'value2' }));
+    });
+
+    it('should not show data, marked for removal', () => {
+      const datasource = new InMemoryDatasource({ readPriority: Infinity });
+      const repository = createRepository({ datasource: [datasource] });
+      
+      return Promise.resolve()
+        .then(() => datasource.set('key1', 'value1'))
+        .then(() => datasource.set('key2', 'value1'))
+        .then(() => repository.delete('key2'))
+        .then(() => repository._syncCache.get('key2'))
+        .then(expectToEqual(deleteAction))
+        .then(() => repository.mget(['key1', 'key2']))
+        .then(expectToEqual({ key1: 'value1', key2: null }));
     });
   });
 
@@ -182,22 +235,42 @@ describe.only('SyncOnRequestRepository', () => {
       const repository = createRepository({ datasource: [datasource] });
 
       return Promise.resolve()
+        .then(() => datasource.set('key2', 'value2'))
         .then(() => repository.set('key', 'value'))
+        .then(() => repository.delete('key2'))
         .then(() => datasource.get('key'))
         .then(expectToEqual(null))
+        .then(() => datasource.get('key2'))
+        .then(expectToEqual('value2'))
         .then(() => repository.sync())
         .then(() => datasource.get('key'))
-        .then(expectToEqual('value'));
+        .then(expectToEqual('value'))
+        .then(() => datasource.get('key2'))
+        .then(expectToEqual(null));
     });
 
-    it('should remove successfully applied operations from cache', () => {
+    it('should remove successfully applied set operations from cache', () => {
       const datasource = new InMemoryDatasource({ readPriority: Infinity });
       const repository = createRepository({ datasource: [datasource] });
 
       return Promise.resolve()
         .then(() => repository.set('key', 'value'))
         .then(() => repository.sync())
-        .then(() => repository._syncCache.expose('key'))
+        .then(() => repository._syncCache.get('key'))
+        .then(expectToEqual(null));
+    });
+
+    it('should remove successfully applied delete operations from cache', () => {
+      const datasource = new InMemoryDatasource({ readPriority: Infinity });
+      const repository = createRepository({ datasource: [datasource] });
+
+      return Promise.resolve()
+        .then(() => datasource.set('key', 'value'))
+        .then(() => repository.delete('key'))
+        .then(() => repository._syncCache.get('key'))
+        .then(expectToEqual(deleteAction))
+        .then(() => repository.sync())
+        .then(() => repository._syncCache.get('key'))
         .then(expectToEqual(null));
     });
 
@@ -209,9 +282,8 @@ describe.only('SyncOnRequestRepository', () => {
         .then(() => repository.set('key', 'value'))
         .then(() => repository.sync())
         .catch(() => {})
-        .then(() => repository._syncCache.expose('key'))
+        .then(() => repository._syncCache.get('key'))
         .then(expectToEqual(wrapAsSetter('value')));
     });
   });
 });
-
