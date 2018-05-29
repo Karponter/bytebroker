@@ -774,10 +774,9 @@ describe('SyncOnUpdateRepository', () => {
 
       return repository.mdelete(['foo', 'bar', 'weird'])
         .then((report) => {
-          expect(report).toIncludeKeys(['foo', 'bar', 'weird']);
-          expect(report.foo).toEqual(true);
-          expect(report.bar).toEqual(true);
-          expect(report.weird).toEqual(false);
+          expect(report.length).toEqual(2);
+          expect(report).toInclude('foo');
+          expect(report).toInclude('bar');
         });
     });
 
