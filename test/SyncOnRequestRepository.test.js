@@ -5,7 +5,10 @@ const expect = require('expect');
 
 const SyncOnRequestRepository = ireq.lib('./SyncOnRequestRepository');
 const Datasource = ireq.lib('./Datasource');
-const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
+const {
+  InMemoryDatasource,
+  SyncCacheDatasource,
+} = ireq.lib.datasource('');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
 const createRepository = options => new SyncOnRequestRepository(options);
@@ -14,12 +17,12 @@ const expectToEqual = (expected) => (value) => expect(value).toEqual(expected);
 const wrapAsSetter = (value) => ({ action: 'set', value });
 const deleteAction = { action: 'delete' };
 
-describe('SyncOnRequestRepository', () => {
+describe.only('SyncOnRequestRepository', () => {
   describe('#constructor', () => {
     it('should initiate storing cache', () => {
       const repository = createRepository();
 
-      expect(repository._syncCache).toBeAn(InMemoryDatasource);
+      expect(repository._syncCache).toBeAn(SyncCacheDatasource);
     });
   });
 
@@ -29,10 +32,10 @@ describe('SyncOnRequestRepository', () => {
       const repository = createRepository({ datasource: [datasource] });
 
       return Promise.resolve()
-        .then(() => repository._syncCache.get('test'))
+        .then(() => repository._syncCache.expose('test'))
         .then(expectToEqual(null))
         .then(() => repository.set('test', 'value'))
-        .then(() => repository._syncCache.get('test'))
+        .then(() => repository._syncCache.expose('test'))
         .then(expectToEqual(wrapAsSetter('value')))
         .then(() => datasource.get('test'))
         .then(expectToEqual(null));
@@ -44,13 +47,13 @@ describe('SyncOnRequestRepository', () => {
       return Promise.resolve()
         .then(() => repository.set('test', 'value1'))
         .then(() => repository.set('test', 'value2'))
-        .then(() => repository._syncCache.get('test'))
+        .then(() => repository._syncCache.expose('test'))
         .then(expectToEqual(wrapAsSetter('value2')));
     });
   });
 
   describe('#get', () => {
-    it('should get data from cache with highest proprity', () => {
+    it('should get data from cache with highest priority', () => {
       const datasource = new InMemoryDatasource({ readPriority: Infinity });
       const repository = createRepository({ datasource: [datasource] });
       
@@ -82,7 +85,7 @@ describe('SyncOnRequestRepository', () => {
       return Promise.resolve()
         .then(() => datasource.set('test', 'value'))
         .then(() => repository.delete('test'))
-        .then(() => repository._syncCache.get('test'))
+        .then(() => repository._syncCache.expose('test'))
         .then(expectToEqual(deleteAction))
         .then(() => datasource.get('test'))
         .then(expectToEqual('value'));
@@ -93,9 +96,10 @@ describe('SyncOnRequestRepository', () => {
 
       return Promise.resolve()
         .then(() => repository.set('test', 'value'))
+        .then(() => repository._syncCache.expose('test'))
         .then(expectToEqual(wrapAsSetter('value')))
         .then(() => repository.delete('test'))
-        .then(() => repository._syncCache.get('test'))
+        .then(() => repository._syncCache.expose('test'))
         .then(expectToEqual(deleteAction));
     });
   });
@@ -109,8 +113,8 @@ describe('SyncOnRequestRepository', () => {
         .then(() => datasource.set('key1', 'value1'))
         .then(() => datasource.set('key2', 'value1'))
         .then(() => repository.set('key2', 'value2'))
-        .then(() => repository.find('test'))
-        .then(expectToEqual({ key1: 'value1', key2: 'value2' }));
+        .then(() => repository.find('key'))
+        .then(expectToEqual(['key2', 'key1']));
     });
   });
 
@@ -124,7 +128,7 @@ describe('SyncOnRequestRepository', () => {
         .then(() => datasource.set('key2', 'value1'))
         .then(() => repository.set('key2', 'value2'))
         .then(() => repository.getall())
-        .then(expectToEqual({ key1: 'value1', key2: 'value2' }));
+        .then(expectToEqual(['key2', 'key1']));
     });
   });
 
@@ -137,6 +141,8 @@ describe('SyncOnRequestRepository', () => {
         .then(() => datasource.set('key1', 'value1'))
         .then(() => datasource.set('key2', 'value1'))
         .then(() => repository.set('key2', 'value2'))
+        .then(() => repository._syncCache.expose('key2'))
+        .then(expectToEqual(wrapAsSetter('value2')))
         .then(() => repository.mget(['key1', 'key2']))
         .then(expectToEqual({ key1: 'value1', key2: 'value2' }));
     });
@@ -145,7 +151,7 @@ describe('SyncOnRequestRepository', () => {
   describe('#mset', () => {
     it('should delegate to #set method multiple times', () => {
       const repository = createRepository();
-      const spy = expect.createSpy(repository, 'set').andCallThrought();
+      const spy = expect.spyOn(repository, 'set').andCallThrough();
 
       return Promise.resolve()
         .then(() => repository.mset({ key1: 1, key2: 2, key3: 3 }))
@@ -159,10 +165,10 @@ describe('SyncOnRequestRepository', () => {
   describe('#mdelete', () => {
     it('should delegate to #delete method multiple times', () => {
       const repository = createRepository();
-      const spy = expect.createSpy(repository, 'delete').andCallThrought();
+      const spy = expect.spyOn(repository, 'delete').andCallThrough();
 
       return Promise.resolve()
-        .then(() => repository.mdelete({ key1: 1, key2: 2, key3: 3 }))
+        .then(() => repository.mdelete(['key1', 'key2', 'key3']))
         .then(() => {
           expect(spy).toHaveBeenCalled();
           expect(spy.calls.length).toEqual(3);
@@ -191,7 +197,7 @@ describe('SyncOnRequestRepository', () => {
       return Promise.resolve()
         .then(() => repository.set('key', 'value'))
         .then(() => repository.sync())
-        .then(() => repository._syncCache.get('key'))
+        .then(() => repository._syncCache.expose('key'))
         .then(expectToEqual(null));
     });
 
@@ -203,7 +209,7 @@ describe('SyncOnRequestRepository', () => {
         .then(() => repository.set('key', 'value'))
         .then(() => repository.sync())
         .catch(() => {})
-        .then(() => repository._syncCache.get('key'))
+        .then(() => repository._syncCache.expose('key'))
         .then(expectToEqual(wrapAsSetter('value')));
     });
   });
