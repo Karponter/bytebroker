@@ -21,7 +21,7 @@ const expectToEqual = (expected) => (value) => {
 const wrapAsSetter = (value) => ({ action: 'set', value });
 const deleteAction = { action: 'delete' };
 
-describe.only('SyncOnRequestRepository', () => {
+describe('SyncOnRequestRepository', () => {
   describe('#constructor', () => {
     it('should initiate storing cache', () => {
       const repository = createRepository();

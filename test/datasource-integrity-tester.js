@@ -181,7 +181,7 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
       });
     });
 
-    describe('#mdel', () => {
+    describe('#mdelete', () => {
       it('should accept list of IDs as a parameters', () => {
         const spy = expect.createSpy();
         return datasource.mdelete(fixtureObject)
@@ -200,9 +200,9 @@ const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments)
 
       it('should resolve with reports of every delete operator', () => {
         return datasource.mdelete(Object.keys(fixtureObject))
-        .then((res) => {
-          expect(Object.keys(fixtureObject)).toEqual(Object.keys(res));
-        })
+          .then((res) => {
+            expect(Object.keys(fixtureObject)).toEqual(res);
+          })
       });
 
       it('should resolve with true if value was removed', () => {
