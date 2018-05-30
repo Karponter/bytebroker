@@ -11,11 +11,11 @@ const repositoryFactoryMethod = (options = {}) => {
     case SYNC_STRATEGY.NO_SYNC:
       return new NoSyncReposytory(options);
 
-    // case SYNC_STRATEGY.SYNC_ON_REQUEST:
-    //   return new SyncOnRequestReposytory(options);
+    case SYNC_STRATEGY.SYNC_ON_REQUEST:
+      return new SyncOnRequestReposytory(options);
 
-    // case SYNC_STRATEGY.SYNC_ON_TIMEOUT:
-    //   return new SyncOnTimeoutRepository(options);
+    case SYNC_STRATEGY.SYNC_ON_TIMEOUT:
+      return new SyncOnTimeoutRepository(options);
 
     // case SYNC_STRATEGY.SYNC_ON_BUFFER_FULL:
     //   return new SyncOnBufferFullRepository(options);

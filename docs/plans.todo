@@ -6,12 +6,13 @@
    ✔ SyncOnUpdateRepository @done (18-05-08 01:37)
      ✔ Repository => SyncOnUpdateRepository @done (18-05-08 00:28)
      ✔ Refactor SyncStrategy access in tests @done (18-05-08 01:37)
-   ☐ SyncOnRequestRepository
+   ✔ SyncOnRequestRepository @done (18-05-30 22:02)
      ✔ Create unit tests @done (18-05-25 02:30)
-     ☐ Extend SyncOnUpdateRepository and implement additional functions
+     ✔ Extend SyncOnUpdateRepository and implement additional functions @done (18-05-30 22:02)
    ☐ SyncOnTimeoutRepository
      ☐ Create unit tests
-     ☐ Extend SyncOnRequestRepository and implement timing trigger
+     ✔ Extend SyncOnRequestRepository and implement timing trigger @done (18-05-30 22:02)
    ☐ SyncOnBufferFullRepository
+     sizeof modules looks pretty awfull
      ☐ Create unit tests
      ☐ Extend SyncOnRequestRepository and implement buffer-size trigger
