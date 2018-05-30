@@ -16,3 +16,15 @@
      sizeof modules looks pretty awfull
      ☐ Create unit tests
      ☐ Extend SyncOnRequestRepository and implement buffer-size trigger
+ 
+ Misc:
+   ☐ Update comments of method definitions
+   ☐ Add example docs
+
+ Tests: 
+   ☐ Refactor ds integrity tests
+   ☐ Add some missing tests for ds integrity
+ 
+ Datasources:
+   ☐ Fix JSONDatasource to satisfy integrity tests
+   ☐ Add "existingFilesOnly" option for JSONDatasource

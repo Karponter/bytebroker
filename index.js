@@ -2,7 +2,12 @@
 
 const ireq = require('./ireq');
 const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
-const { SyncOnUpdateRepository, NoSyncReposytory } = ireq.lib('');
+const {
+  NoSyncReposytory,
+  SyncOnUpdateRepository,
+  SyncOnRequestReposytory,
+  SyncOnTimeoutRepository,
+} = ireq.lib('');
 const datasourceImplementations = ireq.lib.datasource('');
 
 const repositoryFactoryMethod = (options = {}) => {
