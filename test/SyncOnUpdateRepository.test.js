@@ -4,13 +4,11 @@
  * Coveres both SyncOnUpdateRepository and NoSyncRepository
  */
 
-const ireq = require('../ireq');
 const expect = require('expect');
 
-const SyncOnUpdateRepository = ireq.lib('./SyncOnUpdateRepository');
-const Datasource = ireq.lib('./Datasource');
-const InMemoryDatasource = ireq.lib.datasource('./InMemoryDatasource');
-const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
+const { SyncOnUpdateRepository, Datasource } = require('../lib');
+const { InMemoryDatasource } = require('../lib/datasource');
+const SYNC_STRATEGY = require('../lib/constants/sync-strategy');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
 const createRepository = (options) => new SyncOnUpdateRepository(options);
@@ -31,12 +29,6 @@ describe('SyncOnUpdateRepository', () => {
       expect(repository.datasourceStack).toBeAn('array');
       expect(repository.syncStrategy).toBeA('number');
       expect(repository.errorPeocessingStrategy).toBeA('number');
-    });
-
-    it.skip('should construct with in-memory caching', () => {
-      const repository = createRepository();
-
-      expect(repository.syncCache).toBeA(InMemoryDatasource);
     });
 
     it('should accept custom Datasource stack as provision', () => {
@@ -64,9 +56,6 @@ describe('SyncOnUpdateRepository', () => {
       expect(repository.entityFactory).toBeA(Function);
       expect(repository.entityFactory()).toEqual('testingResult');
     });
-
-    // @TODO: TBD
-    it.skip('should accept custom ErrorProcessingStrategy as provision', () => {});
   });
 
   describe('methods should be thenable', () => {
@@ -793,31 +782,6 @@ describe('SyncOnUpdateRepository', () => {
           spy.calls.forEach((call, index) => {
             expect(call.arguments).toEqual([ `id${index + 1}` ]);
           });
-        });
-    });
-  });
-
-  describe.skip('#sync', () => {
-    it('it should resolve when sync process is finished', () => {
-      const context = {};
-      const dskeys = ['one', 'two', 'four'];
-
-      const datasources = dskeys.map((dsid) => {
-        const ds = new InMemoryDatasource();
-        ds.mset = undefined;
-        ds.set = () => new Promise((resolve) => {
-          context[key] = true;
-          resolve(true);
-        });
-      });
-
-      const repository = createRepository({ datasource: datasources });
-
-      repository.sync()
-        .then((report) => {
-          expect(context.toIncludeKeys(dskeys));
-          expect(Object.keys(context).length).toEqual(dskeys.length);
-          dskeys.forEach(key => expect(context[key]).toEqual(true));
         });
     });
   });

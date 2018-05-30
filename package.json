@@ -18,7 +18,13 @@
   "bugs": {
     "url": "https://github.com/Karponter/bytebroker/issues"
   },
-  "keywords": ["repository", "ddd", "pattern", "data-layer", "datasource"],
+  "keywords": [
+    "repository",
+    "ddd",
+    "pattern",
+    "data-layer",
+    "datasource"
+  ],
   "homepage": "https://github.com/Karponter/bytebroker#readme",
   "devDependencies": {
     "eslint-config-standard": "^11.0.0",
@@ -31,7 +37,6 @@
   },
   "dependencies": {
     "@types/node": "^9.4.0",
-    "ireq": "^2.0.0",
     "tslint": "^5.9.1"
   }
 }

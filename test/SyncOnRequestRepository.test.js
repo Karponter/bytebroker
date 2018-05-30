@@ -1,11 +1,9 @@
 'use strict';
 
-const ireq = require('../ireq');
 const expect = require('expect');
 
-const SyncOnRequestRepository = ireq.lib('./SyncOnRequestRepository');
-const Datasource = ireq.lib('./Datasource');
-const { InMemoryDatasource } = ireq.lib.datasource('');
+const { SyncOnRequestRepository, Datasource } = require('../lib');
+const { InMemoryDatasource } = require('../lib/datasource');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
 const createRepository = options => new SyncOnRequestRepository(options);

@@ -1,14 +1,11 @@
 'use strict';
 
-const ireq = require('./ireq');
-const SYNC_STRATEGY = ireq.lib.constants('./sync-strategy');
-const {
-  NoSyncReposytory,
-  SyncOnUpdateRepository,
-  SyncOnRequestReposytory,
-  SyncOnTimeoutRepository,
-} = ireq.lib('');
-const datasourceImplementations = ireq.lib.datasource('');
+const SYNC_STRATEGY = require('./lib/constants/sync-strategy');
+const NoSyncReposytory = require('./lib/NoSyncReposytory');
+const SyncOnUpdateRepository = require('./lib/SyncOnUpdateRepository');
+const SyncOnRequestReposytory = require('./lib/SyncOnRequestReposytory');
+const SyncOnTimeoutRepository = require('./lib/SyncOnTimeoutRepository');
+const datasourceImplementations = require('./lib/datasource');
 
 const repositoryFactoryMethod = (options = {}) => {
   switch (options.syncStrategy) {

@@ -1,7 +1,6 @@
 'use setrict';
 
-const ireq = require('ireq');
-const Datasource = ireq.lib('./Datasource');
+const Datasource = require('../../lib/Datasource');
 
 class BrokenDatasource extends Datasource {
 
