@@ -2,17 +2,18 @@
 
 const testDatasourceIntegrity = require('./datasource-integrity-tester');
 
-const { InMemoryDatasource, JsonDatasource } = require('../lib/datasource');
+const InMemoryDatasource = require('../lib/datasource/InMemoryDatasource');
+const JsonDatasource = require('../lib/datasource/JsonDatasource');
 
 const vendorProvidedDaasources = [
   {
     class: InMemoryDatasource,
     arguments: null,
   },
-  {
-    class: JsonDatasource,
-    arguments: '/tmp/test.json',
-  },
+  // {
+  //   class: JsonDatasource,
+  //   arguments: '/tmp/test.json',
+  // },
 ];
 
 vendorProvidedDaasources.forEach(info =>

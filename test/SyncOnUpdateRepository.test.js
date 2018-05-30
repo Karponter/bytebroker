@@ -6,8 +6,9 @@
 
 const expect = require('expect');
 
-const { SyncOnUpdateRepository, Datasource } = require('../lib');
-const { InMemoryDatasource } = require('../lib/datasource');
+const SyncOnUpdateRepository = require('../lib/SyncOnUpdateRepository');
+const Datasource = require('../lib/Datasource');
+const InMemoryDatasource = require('../lib/datasource/InMemoryDatasource');
 const SYNC_STRATEGY = require('../lib/constants/sync-strategy');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 

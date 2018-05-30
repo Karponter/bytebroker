@@ -20,6 +20,8 @@
  Misc:
    ☐ Update comments of method definitions
    ☐ Add example docs
+   ☐ Add linting
+   ☐ Add code coverage https://istanbul.js.org/
 
  Tests: 
    ☐ Refactor ds integrity tests

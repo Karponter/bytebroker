@@ -2,8 +2,9 @@
 
 const expect = require('expect');
 
-const { SyncOnRequestRepository, Datasource } = require('../lib');
-const { InMemoryDatasource } = require('../lib/datasource');
+const SyncOnRequestRepository = require('../lib/SyncOnRequestRepository');
+const Datasource = require('../lib/Datasource');
+const InMemoryDatasource = require('../lib/datasource/InMemoryDatasource');
 const BrokenDatasource = require('./helpers/BrokenDatasource');
 
 const createRepository = options => new SyncOnRequestRepository(options);
