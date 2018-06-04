@@ -1,9 +1,9 @@
 'use strict';
 
 const SYNC_STRATEGY = require('./lib/constants/sync-strategy');
-const NoSyncReposytory = require('./lib/NoSyncReposytory');
+const NoSyncRepository = require('./lib/NoSyncRepository');
 const SyncOnUpdateRepository = require('./lib/SyncOnUpdateRepository');
-const SyncOnRequestReposytory = require('./lib/SyncOnRequestReposytory');
+const SyncOnRequestRepository = require('./lib/SyncOnRequestRepository');
 const SyncOnTimeoutRepository = require('./lib/SyncOnTimeoutRepository');
 const datasourceImplementations = require('./lib/datasource');
 
@@ -11,10 +11,10 @@ const repositoryFactoryMethod = (options = {}) => {
   switch (options.syncStrategy) {
 
     case SYNC_STRATEGY.NO_SYNC:
-      return new NoSyncReposytory(options);
+      return new NoSyncRepository(options);
 
     case SYNC_STRATEGY.SYNC_ON_REQUEST:
-      return new SyncOnRequestReposytory(options);
+      return new SyncOnRequestRepository(options);
 
     case SYNC_STRATEGY.SYNC_ON_TIMEOUT:
       return new SyncOnTimeoutRepository(options);

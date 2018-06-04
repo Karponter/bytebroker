@@ -11,9 +11,9 @@ Promise.resolve()
 const action = () => {
   Promise.resolve()
     .then(() => messages.get('greeting'))
-    .then(console.log())
+    .then(console.log)
     .then(() => messages.get('bye'))
-    .then(console.log());
+    .then(console.log);
 };
 
 setTimeout(action, 1000);
