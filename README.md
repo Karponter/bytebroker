@@ -1,25 +1,25 @@
-# bytebroker
+# kreepo
 NodeJS implementation of Repository pattern
 
 ## Insallation
 
-`npm install --save bytebroker@latest`
+`npm install --save kreepo@latest`
 
 ## Usage
 
 To use your first Repository just import module and call a factory method.
 
 ```javascript
-const bytebroker = require('bytebroker');
+const kreepo = require('kreepo');
 
 // create new repository
-const dummyRepository = bytebroker.createRepository();
+const dummyRepository = kreepo.createRepository();
 ```
 
 All methods are thenable (return Promises), while construction process is synchronious.
 
 ```javascript
-const dummyRepository = bytebroker.createRepository();
+const dummyRepository = kreepo.createRepository();
 
 dummyRepository.set('key', 'value')
   .then(() => dummyRepository.get('key'))
@@ -32,11 +32,11 @@ Repository pattern requires some kind of adapters for each data-layer platform t
 
 Datasources are classes that incapsulate logic of direct data-layer communiation.
 
-Many of general purpose datasources are provided with **bytebroker** package.
+Many of general purpose datasources are provided with **kreepo** package.
 
 ```javascript
-// access datasource classes within a bytebroker facade
-const { InMemoryDatasource, JsonDatasource } = bytebroker.datasource;
+// access datasource classes within a kreepo facade
+const { InMemoryDatasource, JsonDatasource } = kreepo.datasource;
 
 // create a Datasource that stores data in RAM
 const ramDatasource = new InMemoryDatasource();

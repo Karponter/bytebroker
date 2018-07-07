@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const testDatasourceIntegrity = require('./datasource-integrity-tester');
 
 const InMemoryDatasource = require('../lib/datasource/InMemoryDatasource');
@@ -8,12 +9,12 @@ const JsonDatasource = require('../lib/datasource/JsonDatasource');
 const vendorProvidedDaasources = [
   {
     class: InMemoryDatasource,
-    arguments: null,
+    arguments: [null],
   },
-  // {
-  //   class: JsonDatasource,
-  //   arguments: '/tmp/test.json',
-  // },
+  {
+    class: JsonDatasource,
+    arguments: ['/tmp/test.json', { forceEmptyFile: 1 }],
+  },
 ];
 
 vendorProvidedDaasources.forEach(info =>

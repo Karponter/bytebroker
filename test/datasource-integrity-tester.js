@@ -8,7 +8,7 @@ const fixtureObject = {
 const testDatasourceIntegrity = (DatasourceDefinition, instantinationAarguments) => {
 
   const createDatasource = () =>
-    new DatasourceDefinition(instantinationAarguments);
+    new DatasourceDefinition(...instantinationAarguments);
 
   let datasource = createDatasource();
   const title = datasource.constructor.name;
