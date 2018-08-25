@@ -6,6 +6,7 @@ const SyncOnUpdateRepository = require('./lib/SyncOnUpdateRepository');
 const SyncOnRequestRepository = require('./lib/SyncOnRequestRepository');
 const SyncOnTimeoutRepository = require('./lib/SyncOnTimeoutRepository');
 const datasourceImplementations = require('./lib/datasource');
+const Datasource = require('./lib/Datasource');
 
 const repositoryFactoryMethod = (options = {}) => {
   switch (options.syncStrategy) {
@@ -33,4 +34,11 @@ module.exports = {
   createRepository: repositoryFactoryMethod,
   datasource: datasourceImplementations,
   syncStrategy: SYNC_STRATEGY,
+  interfaces: {
+    Datasource,
+    NoSyncRepository,
+    SyncOnRequestRepository,
+    SyncOnTimeoutRepository,
+    SyncOnUpdateRepository,
+  }
 };
